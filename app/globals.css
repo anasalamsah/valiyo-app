@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  /* Valiyo brand tokens */
+  --color-bg: #fffbf2;
+  --color-surface: #ffffff;
+  --color-primary: #5b3df5;
+  --color-primary-hover: #4c2fe0;
+  --color-secondary: #ffd447;
+  --color-accent: #63d5c7;
+  --color-text: #272640;
+  --color-text-muted: #6b6a85;
+  --color-border: #ece6d8;
+  --color-grow-bg: #ebe6fb;
+
+  --radius-card: 24px;
+  --radius-pill: 999px;
+
+  --font-display: "Fredoka", ui-rounded, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-grow-bg: var(--color-grow-bg);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
