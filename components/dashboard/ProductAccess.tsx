@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Lock, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { hasProductAccess } from "@/lib/firestore/access";
 import { cn } from "@/lib/utils/cn";
+import { PRODUCT_URLS } from "@/config/products";
 import type { ProductId } from "@/types/access";
 
 const PRODUCT_META: Record<
@@ -15,13 +15,13 @@ const PRODUCT_META: Record<
     label: "Learn",
     emoji: "📚",
     description: "Coding, AI and future-ready skills, paced for your child.",
-    href: "/learn",
+    href: PRODUCT_URLS.learn,
   },
   discovery: {
     label: "Discovery",
     emoji: "🧠",
     description: "Understand your child's strengths and learning style.",
-    href: "/discovery",
+    href: PRODUCT_URLS.discovery,
   },
 };
 
@@ -73,12 +73,12 @@ export function ProductAccess() {
               </p>
 
               {unlocked ? (
-                <Link
+                <a
                   href={meta.href}
                   className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
                 >
                   Open {meta.label} →
-                </Link>
+                </a>
               ) : (
                 <UpgradeCta productLabel={meta.label} />
               )}

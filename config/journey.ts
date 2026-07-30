@@ -1,4 +1,5 @@
 import type { GrowPillar, JourneyStep } from "@/types/journey";
+import { PRODUCT_URLS } from "@/config/products";
 
 export const journeySteps: JourneyStep[] = [
   {
@@ -11,7 +12,7 @@ export const journeySteps: JourneyStep[] = [
       "Understand your child's learning profile before starting their learning journey.",
     status: "start",
     ctaLabel: "Open Discovery",
-    href: "/discovery",
+    href: PRODUCT_URLS.discovery,
   },
   {
     id: "learn",
@@ -22,7 +23,7 @@ export const journeySteps: JourneyStep[] = [
     description: "Build coding and AI skills through personalized learning.",
     status: "next",
     ctaLabel: "Open Learn",
-    href: "/learn",
+    href: PRODUCT_URLS.learn,
   },
   {
     id: "ai-tutor",

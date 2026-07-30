@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { journeySteps } from "@/config/journey";
 import { StatusBadge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils/cn";
@@ -47,14 +46,14 @@ export function JourneyCards() {
                   {step.ctaLabel}
                 </span>
               ) : (
-                <Link
+                <a
                   href={step.href}
                   className={cn(
                     "mt-5 inline-block text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
                   )}
                 >
                   {step.ctaLabel}
-                </Link>
+                </a>
               )}
             </div>
           );
