@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -55,8 +56,22 @@ export async function createUserIfNotExists(user: User): Promise<boolean> {
 }
 
 /**
- * Looks up a single user by their exact, trimmed email. Used by
- * /admin/access to find who to grant/remove product access for.
+ * Lists every registered user, newest first. Powers the /admin/access
+ * roster so an admin can browse and grant/remove access for anyone
+ * without knowing their email in advance. Requires the `isAdmin()`
+ * Firestore rule (only admins may `list` the `users` collection).
+ */
+export async function listAllUsers(): Promise<UserProfile[]> {
+  const db = requireFirestore();
+  const q = query(collection(db, COLLECTION), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as UserProfile);
+}
+
+/**
+ * Looks up a single user by their exact, trimmed email. Kept for
+ * programmatic/API use; the /admin/access UI itself filters the roster
+ * from `listAllUsers` client-side instead of querying per keystroke.
  * Requires the caller to satisfy the `isAdmin()` Firestore rule (only
  * admins may `list`/query the `users` collection) — anyone else gets a
  * permission-denied error from Firestore itself.

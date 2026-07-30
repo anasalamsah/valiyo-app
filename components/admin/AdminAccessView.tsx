@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Search } from "lucide-react";
-import { findUserByEmail, setProductAccess } from "@/lib/firestore/users";
+import { useEffect, useMemo, useState } from "react";
+import { Search, RefreshCw } from "lucide-react";
+import { listAllUsers, setProductAccess } from "@/lib/firestore/users";
 import { cn } from "@/lib/utils/cn";
 import type { UserProfile } from "@/types/user";
 import type { ProductId } from "@/types/access";
@@ -14,59 +14,67 @@ const PRODUCT_LABELS: Record<ProductId, string> = {
 const PRODUCT_IDS: ProductId[] = ["learn", "discovery"];
 
 export function AdminAccessView() {
-  const [email, setEmail] = useState("");
-  const [result, setResult] = useState<UserProfile | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserProfile[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [filterTerm, setFilterTerm] = useState("");
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmed = email.trim();
-    if (!trimmed) return;
-
-    setSearching(true);
-    setSearchError(null);
-    setActionError(null);
+  async function loadUsers() {
+    setLoading(true);
+    setLoadError(null);
     try {
-      const found = await findUserByEmail(trimmed);
-      setResult(found);
-      setHasSearched(true);
-      if (!found) setSearchError("No user found with that email.");
+      setUsers(await listAllUsers());
     } catch (err) {
-      setResult(null);
-      setHasSearched(true);
-      setSearchError(err instanceof Error ? err.message : "Search failed.");
+      setLoadError(err instanceof Error ? err.message : "Failed to load users.");
     } finally {
-      setSearching(false);
+      setLoading(false);
     }
   }
 
-  async function handleSetAccess(product: ProductId, granted: boolean) {
-    if (!result) return;
-    const actionKey = `${product}-${granted}`;
-    setPendingAction(actionKey);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: initial data load on mount, same pattern as lib/hooks/useAsyncData.ts.
+    void loadUsers();
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    const term = filterTerm.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter(
+      (u) =>
+        (u.email ?? "").toLowerCase().includes(term) ||
+        (u.displayName ?? "").toLowerCase().includes(term)
+    );
+  }, [users, filterTerm]);
+
+  async function handleSetAccess(user: UserProfile, product: ProductId, granted: boolean) {
+    const key = `${user.uid}-${product}`;
+    setPendingKey(key);
     setActionError(null);
     try {
-      await setProductAccess(result.uid, product, granted);
-      setResult((prev) =>
+      await setProductAccess(user.uid, product, granted);
+      setUsers((prev) =>
         prev
-          ? {
-              ...prev,
-              products: {
-                learn: prev.products?.learn ?? false,
-                discovery: prev.products?.discovery ?? false,
-                [product]: granted,
-              },
-            }
+          ? prev.map((u) =>
+              u.uid === user.uid
+                ? {
+                    ...u,
+                    products: {
+                      learn: u.products?.learn ?? false,
+                      discovery: u.products?.discovery ?? false,
+                      [product]: granted,
+                    },
+                  }
+                : u
+            )
           : prev
       );
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Failed to update access.");
     } finally {
-      setPendingAction(null);
+      setPendingKey(null);
     }
   }
 
@@ -77,106 +85,117 @@ export function AdminAccessView() {
           Grant access
         </p>
         <h1 className="mt-1 font-display text-2xl font-semibold text-text">
-          Find a family by email
+          All registered families
         </h1>
         <p className="mt-1 text-sm text-text-muted">
-          Search a parent&rsquo;s account to grant or remove Learn and Discovery access.
+          Every signed-up parent shows up here — search to narrow the list, then
+          tap a product to grant or remove access.
         </p>
       </div>
 
-      <form
-        onSubmit={handleSearch}
-        className="flex flex-col gap-3 rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5 sm:flex-row sm:items-center"
-      >
-        <label htmlFor="admin-search-email" className="sr-only">
-          Search by email
-        </label>
-        <input
-          id="admin-search-email"
-          type="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="parent@email.com"
-          className="flex-1 rounded-2xl border border-border bg-bg px-4 py-2.5 text-sm text-text outline-none focus:border-primary"
-        />
+      <div className="flex flex-col gap-3 rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search
+            size={14}
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+          />
+          <input
+            type="text"
+            value={filterTerm}
+            onChange={(event) => setFilterTerm(event.target.value)}
+            placeholder="Search by name or email"
+            className="w-full rounded-2xl border border-border bg-bg py-2.5 pl-10 pr-4 text-sm text-text outline-none focus:border-primary"
+          />
+        </div>
         <button
-          type="submit"
-          disabled={searching}
-          className="inline-flex items-center justify-center gap-2 rounded-pill bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          type="button"
+          onClick={() => void loadUsers()}
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-2 rounded-pill border border-border px-4 py-2.5 text-xs font-semibold text-text transition-colors hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Search size={14} />
-          {searching ? "Searching…" : "Search"}
+          <RefreshCw size={13} className={cn(loading && "animate-spin")} />
+          Refresh
         </button>
-      </form>
+      </div>
 
-      {hasSearched && searchError && (
+      {actionError && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {searchError}
+          {actionError}
         </p>
       )}
 
-      {result && (
-        <div className="rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5">
-          <div>
-            <p className="font-display text-lg font-semibold text-text">
-              {result.displayName ?? "Unnamed parent"}
-            </p>
-            <p className="text-sm text-text-muted">{result.email}</p>
-          </div>
-
-          {actionError && (
-            <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {actionError}
-            </p>
-          )}
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {PRODUCT_IDS.map((product) => {
-              const granted = result.products?.[product] ?? false;
-              const grantPending = pendingAction === `${product}-true`;
-              const removePending = pendingAction === `${product}-false`;
-
-              return (
-                <div key={product} className="rounded-2xl border border-border bg-bg p-5">
-                  <div className="flex items-center justify-between">
-                    <p className="font-display text-base font-semibold text-text">
-                      {PRODUCT_LABELS[product]}
-                    </p>
-                    <span
-                      className={cn(
-                        "rounded-pill px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-                        granted ? "bg-accent/15 text-accent" : "bg-black/5 text-text-muted"
-                      )}
-                    >
-                      {granted ? "Active" : "Locked"}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={granted || grantPending}
-                      onClick={() => handleSetAccess(product, true)}
-                      className="rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {grantPending ? "Granting…" : `Grant ${PRODUCT_LABELS[product]}`}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!granted || removePending}
-                      onClick={() => handleSetAccess(product, false)}
-                      className="rounded-pill border border-border px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:border-primary/40 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {removePending ? "Removing…" : `Remove ${PRODUCT_LABELS[product]}`}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {loadError && (
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {loadError}
+        </p>
       )}
+
+      <div className="rounded-[28px] bg-surface p-3 shadow-sm shadow-black/5 sm:p-4">
+        {loading ? (
+          <div className="space-y-2 p-2">
+            <div className="h-16 animate-pulse rounded-2xl bg-bg" />
+            <div className="h-16 animate-pulse rounded-2xl bg-bg" />
+            <div className="h-16 animate-pulse rounded-2xl bg-bg" />
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <p className="p-4 text-sm text-text-muted">
+            {users && users.length > 0
+              ? "No users match your search."
+              : "No registered users yet."}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {filteredUsers.map((user) => (
+              <li
+                key={user.uid}
+                className="flex flex-col gap-3 rounded-2xl border border-border bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-text">
+                    {user.displayName ?? "Unnamed parent"}
+                    {user.role === "admin" && (
+                      <span className="ml-2 rounded-pill bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                        Admin
+                      </span>
+                    )}
+                  </p>
+                  <p className="truncate text-xs text-text-muted">{user.email}</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {PRODUCT_IDS.map((product) => {
+                    const granted = user.products?.[product] ?? false;
+                    const isPending = pendingKey === `${user.uid}-${product}`;
+                    return (
+                      <button
+                        key={product}
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => handleSetAccess(user, product, !granted)}
+                        title={
+                          granted
+                            ? `Remove ${PRODUCT_LABELS[product]} access`
+                            : `Grant ${PRODUCT_LABELS[product]} access`
+                        }
+                        className={cn(
+                          "rounded-pill px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                          granted
+                            ? "bg-accent/15 text-accent hover:bg-accent/25"
+                            : "bg-black/5 text-text-muted hover:bg-black/10"
+                        )}
+                      >
+                        {isPending
+                          ? "Updating…"
+                          : `${PRODUCT_LABELS[product]}: ${granted ? "Active" : "Locked"}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }
