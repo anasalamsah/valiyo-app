@@ -1,7 +1,19 @@
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  where,
+} from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { requireFirestore } from "@/lib/firebase/firestore";
 import type { UserProfile } from "@/types/user";
+import type { ProductId } from "@/types/access";
 
 const COLLECTION = "users";
 
@@ -40,6 +52,44 @@ export async function createUserIfNotExists(user: User): Promise<boolean> {
   });
 
   return true;
+}
+
+/**
+ * Looks up a single user by their exact, trimmed email. Used by
+ * /admin/access to find who to grant/remove product access for.
+ * Requires the caller to satisfy the `isAdmin()` Firestore rule (only
+ * admins may `list`/query the `users` collection) — anyone else gets a
+ * permission-denied error from Firestore itself.
+ */
+export async function findUserByEmail(email: string): Promise<UserProfile | null> {
+  const db = requireFirestore();
+  const trimmed = email.trim();
+  if (!trimmed) return null;
+
+  const q = query(collection(db, COLLECTION), where("email", "==", trimmed), limit(1));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].data() as UserProfile;
+}
+
+/**
+ * Grants or removes a single product on `users/{uid}.products`, e.g.
+ * `setProductAccess(uid, "learn", true)`. Uses a dot-path update so it
+ * creates the `products` map on first use even for users who existed
+ * before this field did — Firestore fills in intermediate objects for a
+ * dotted field path automatically. Restricted server-side to admins by
+ * the Firestore rule on `users/{uid}` (admins may only touch `products`,
+ * nothing else on the document).
+ */
+export async function setProductAccess(
+  uid: string,
+  product: ProductId,
+  granted: boolean
+): Promise<void> {
+  const db = requireFirestore();
+  await updateDoc(doc(db, COLLECTION, uid), {
+    [`products.${product}`]: granted,
+  });
 }
 
 /**

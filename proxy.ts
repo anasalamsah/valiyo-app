@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = ["/dashboard", "/admin"];
 const SESSION_MARKER_COOKIE = "valiyo_signed_in";
 
 /**
@@ -9,21 +9,23 @@ const SESSION_MARKER_COOKIE = "valiyo_signed_in";
  * IMPORTANT: Firebase Auth here uses the client SDK only (popup sign-in,
  * session kept in IndexedDB) — there's no Admin SDK/service account in
  * this project to mint a verifiable session cookie, so this middleware
- * cannot cryptographically confirm who's signed in. It checks a
+ * cannot cryptographically confirm who's signed in, and it has no way to
+ * check `role == "admin"` for /admin/* at the edge either. It checks a
  * non-httpOnly marker cookie (set/cleared in AuthProvider right after
- * Firebase Auth resolves) purely to avoid flashing the dashboard shell to
+ * Firebase Auth resolves) purely to avoid flashing protected shells to
  * signed-out visitors on direct navigation or refresh.
  *
  * This is NOT the security boundary. The real enforcement is:
- *   1. `RouteGuard` (components/auth/RouteGuard.tsx), which redirects
- *      client-side as soon as Firebase Auth confirms there's no user.
+ *   1. `RouteGuard` / `AdminRouteGuard` (components/auth/), which redirect
+ *      client-side as soon as Firebase Auth (and, for admin routes, the
+ *      user's `role`) resolves.
  *   2. Firestore Security Rules (firestore.rules), which reject every
- *      read/write that isn't scoped to the authenticated uid, regardless
- *      of what the client claims.
+ *      read/write that isn't scoped to the authenticated uid — and, for
+ *      `users/{uid}`, restrict admins to only ever touching `products`.
  *
  * To upgrade this into a real edge-verified guard: add the Firebase Admin
- * SDK, exchange the ID token for an httpOnly session cookie in an API
- * route on login, and verify it here with
+ * SDK, exchange the ID token for an httpOnly session cookie (with custom
+ * claims for role) in an API route on login, and verify it here with
  * `admin.auth().verifySessionCookie()` instead of reading a plain cookie.
  */
 export function proxy(request: NextRequest) {
@@ -43,5 +45,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

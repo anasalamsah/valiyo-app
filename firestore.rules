@@ -15,11 +15,25 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    // True only for the caller's own users/{uid} doc having role == "admin".
+    // Assigning that role is a manual, backend/console-only operation —
+    // nothing in this app lets a user set their own role.
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
     // users/{uid} — profile created/updated by the client on login.
+    // Admins get a narrow bypass: they can look up any user (needed for
+    // the email search in /admin/access) and update ONLY the `products`
+    // map (grant/remove access) — they can never touch role, email, or
+    // anyone's own identity fields.
     match /users/{uid} {
-      allow read: if isOwner(uid);
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(uid) && request.resource.data.uid == uid;
-      allow update: if isOwner(uid) && request.resource.data.uid == uid;
+      allow update: if (isOwner(uid) && request.resource.data.uid == uid && request.resource.data.role == resource.data.role)
+        || (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["products"]));
       allow delete: if false;
     }
 

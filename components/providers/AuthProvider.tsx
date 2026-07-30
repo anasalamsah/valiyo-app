@@ -58,6 +58,7 @@ type AuthContextValue = {
   selectChild: (childId: string | null) => void;
   refreshChildren: () => Promise<void>;
   refreshAccess: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -76,6 +77,7 @@ export const AuthContext = createContext<AuthContextValue>({
   selectChild: () => {},
   refreshChildren: async () => {},
   refreshAccess: async () => {},
+  refreshProfile: async () => {},
   signOut: async () => {},
 });
 
@@ -182,6 +184,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccess(await getUserAccess(user.uid));
   }, [user]);
 
+  /**
+   * Re-fetches users/{uid} without a full page reload — so a parent whose
+   * access was just granted/removed by an admin can see it update in the
+   * same session if this is called (e.g. from a manual refresh action),
+   * in addition to it always being current after any page reload.
+   */
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    setProfile(await getCurrentUserProfile(user.uid));
+  }, [user]);
+
   const signOut = useCallback(async () => {
     await firebaseSignOut();
     setSessionMarker(false);
@@ -208,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       selectChild,
       refreshChildren,
       refreshAccess,
+      refreshProfile,
       signOut,
     }),
     [
@@ -223,6 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       selectChild,
       refreshChildren,
       refreshAccess,
+      refreshProfile,
       signOut,
     ]
   );

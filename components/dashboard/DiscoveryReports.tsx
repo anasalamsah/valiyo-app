@@ -8,8 +8,8 @@ import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import { LockedSection } from "@/components/dashboard/LockedSection";
 
 export function DiscoveryReports() {
-  const { access, selectedChild } = useAuth();
-  const unlocked = hasProductAccess(access, "discovery");
+  const { access, profile, selectedChild } = useAuth();
+  const unlocked = hasProductAccess(access, profile, "discovery");
 
   const fetcher = useCallback(() => {
     if (!selectedChild) return Promise.resolve([]);

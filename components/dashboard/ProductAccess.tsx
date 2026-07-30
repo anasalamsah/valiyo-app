@@ -26,7 +26,7 @@ const PRODUCT_META: Record<
 };
 
 export function ProductAccess() {
-  const { access, profileLoading } = useAuth();
+  const { access, profile, profileLoading } = useAuth();
 
   return (
     <section className="rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5">
@@ -40,7 +40,7 @@ export function ProductAccess() {
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {(Object.keys(PRODUCT_META) as ProductId[]).map((productId) => {
           const meta = PRODUCT_META[productId];
-          const unlocked = hasProductAccess(access, productId);
+          const unlocked = hasProductAccess(access, profile, productId);
 
           return (
             <div

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { navLinks, siteConfig } from "@/config/site";
 import { AuthButton } from "@/components/ui/AuthButton";
+import { AdminNavLink } from "@/components/layout/AdminNavLink";
 
 export function Navbar() {
   return (
@@ -23,7 +24,10 @@ export function Navbar() {
           ))}
         </ul>
 
-        <AuthButton />
+        <div className="flex items-center gap-5">
+          <AdminNavLink />
+          <AuthButton />
+        </div>
       </nav>
     </header>
   );

@@ -1,6 +1,7 @@
 import { doc, getDoc } from "firebase/firestore";
 import { requireFirestore } from "@/lib/firebase/firestore";
 import type { ProductId, UserAccess } from "@/types/access";
+import type { UserProfile } from "@/types/user";
 
 const COLLECTION = "user_access";
 
@@ -24,6 +25,17 @@ export async function getUserAccess(uid: string): Promise<UserAccess> {
   };
 }
 
-export function hasProductAccess(access: UserAccess | null, product: ProductId): boolean {
-  return access?.products.includes(product) ?? false;
+/**
+ * A product is unlocked if EITHER source grants it:
+ *  - `user_access/{uid}.products` — purchase-driven (future Lynk.id webhook)
+ *  - `users/{uid}.products.<id>` — admin-granted (see /admin/access)
+ */
+export function hasProductAccess(
+  access: UserAccess | null,
+  profile: UserProfile | null,
+  product: ProductId
+): boolean {
+  const fromPurchase = access?.products.includes(product) ?? false;
+  const fromAdminGrant = profile?.products?.[product] ?? false;
+  return fromPurchase || fromAdminGrant;
 }
