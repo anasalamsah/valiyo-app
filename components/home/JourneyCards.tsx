@@ -1,6 +1,6 @@
 import { journeySteps } from "@/config/journey";
 import { StatusBadge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils/cn";
+import { JourneyCardCta } from "@/components/home/JourneyCardCta";
 
 export function JourneyCards() {
   return (
@@ -46,14 +46,7 @@ export function JourneyCards() {
                   {step.ctaLabel}
                 </span>
               ) : (
-                <a
-                  href={step.href}
-                  className={cn(
-                    "mt-5 inline-block text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
-                  )}
-                >
-                  {step.ctaLabel}
-                </a>
+                <JourneyCardCta step={step} />
               )}
             </div>
           );

@@ -4,7 +4,6 @@ import {
   deleteDoc,
   doc,
   getDocs,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -17,19 +16,22 @@ const COLLECTION = "children";
 
 /**
  * Lists a parent's children, oldest-added first.
- * Requires a composite index on (parentUid asc, createdAt asc) — Firestore
- * will surface a console link to create it the first time this runs
- * against a fresh project.
+ *
+ * Deliberately NOT `orderBy("createdAt")` server-side: combined with the
+ * `where("parentUid", ...)` filter, that requires a composite index that
+ * doesn't exist until someone manually creates it in the Firebase console
+ * (this is what caused the "query requires an index" error). A family's
+ * child list is small, so sorting the already-fetched results in JS is
+ * effectively free and needs zero Firestore configuration.
  */
 export async function listChildren(parentUid: string): Promise<Child[]> {
   const db = requireFirestore();
-  const q = query(
-    collection(db, COLLECTION),
-    where("parentUid", "==", parentUid),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(db, COLLECTION), where("parentUid", "==", parentUid));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Child, "id">) }));
+  const children = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Child, "id">) }));
+  return children.sort(
+    (a, b) => (a.createdAt?.toMillis() ?? 0) - (b.createdAt?.toMillis() ?? 0)
+  );
 }
 
 export async function addChild(parentUid: string, input: ChildInput): Promise<string> {
