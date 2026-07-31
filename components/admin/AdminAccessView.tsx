@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Search, RefreshCw, UserPlus } from "lucide-react";
 import { listAllUsers, setProductAccess } from "@/lib/firestore/users";
+import { createPendingAccess } from "@/lib/firestore/pendingAccess";
 import { cn } from "@/lib/utils/cn";
 import type { UserProfile } from "@/types/user";
 import type { ProductId } from "@/types/access";
@@ -20,6 +21,14 @@ export function AdminAccessView() {
   const [filterTerm, setFilterTerm] = useState("");
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Add Purchased Customer card state
+  const [newEmail, setNewEmail] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<ProductId>("learn");
+  const [creating, setCreating] = useState(false);
+  const [createMessage, setCreateMessage] = useState<
+    { type: "success" | "error"; text: string } | null
+  >(null);
 
   async function loadUsers() {
     setLoading(true);
@@ -78,6 +87,35 @@ export function AdminAccessView() {
     }
   }
 
+  async function handleAddPurchasedCustomer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmedEmail = newEmail.trim();
+
+    if (!trimmedEmail || !trimmedEmail.includes("@")) {
+      setCreateMessage({ type: "error", text: "Enter a valid email address." });
+      return;
+    }
+
+    setCreating(true);
+    setCreateMessage(null);
+    try {
+      await createPendingAccess(trimmedEmail, selectedProduct);
+      setCreateMessage({
+        type: "success",
+        text: `${PRODUCT_LABELS[selectedProduct]} access queued for ${trimmedEmail}. It'll apply automatically as soon as they sign in.`,
+      });
+      setNewEmail("");
+      setSelectedProduct("learn");
+    } catch (err) {
+      setCreateMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Failed to add customer.",
+      });
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <section className="space-y-6">
       <div>
@@ -91,6 +129,75 @@ export function AdminAccessView() {
           Every signed-up parent shows up here — search to narrow the list, then
           tap a product to grant or remove access.
         </p>
+      </div>
+
+      <div className="rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5">
+        <div className="flex items-center gap-2">
+          <UserPlus size={16} className="text-primary" />
+          <h2 className="font-display text-base font-semibold text-text">
+            Add Purchased Customer
+          </h2>
+        </div>
+        <p className="mt-1 text-xs text-text-muted">
+          Grant access right after a Lynk.id purchase, even before they&rsquo;ve
+          signed in for the first time — it applies automatically on their
+          first login.
+        </p>
+
+        <form
+          onSubmit={handleAddPurchasedCustomer}
+          className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center"
+        >
+          <label htmlFor="pending-access-email" className="sr-only">
+            Customer email
+          </label>
+          <input
+            id="pending-access-email"
+            type="email"
+            required
+            value={newEmail}
+            onChange={(event) => setNewEmail(event.target.value)}
+            placeholder="customer@email.com"
+            className="flex-1 rounded-2xl border border-border bg-bg px-4 py-2.5 text-sm text-text outline-none focus:border-primary"
+          />
+
+          <label htmlFor="pending-access-product" className="sr-only">
+            Product
+          </label>
+          <select
+            id="pending-access-product"
+            value={selectedProduct}
+            onChange={(event) => setSelectedProduct(event.target.value as ProductId)}
+            className="rounded-2xl border border-border bg-bg px-4 py-2.5 text-sm text-text outline-none focus:border-primary"
+          >
+            {PRODUCT_IDS.map((product) => (
+              <option key={product} value={product}>
+                {PRODUCT_LABELS[product]}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="submit"
+            disabled={creating}
+            className="inline-flex items-center justify-center gap-2 rounded-pill bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {creating ? "Granting…" : "Grant Access"}
+          </button>
+        </form>
+
+        {createMessage && (
+          <p
+            className={cn(
+              "mt-3 rounded-2xl border px-4 py-3 text-sm",
+              createMessage.type === "success"
+                ? "border-accent/30 bg-accent/10 text-accent"
+                : "border-red-200 bg-red-50 text-red-600"
+            )}
+          >
+            {createMessage.text}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 rounded-[28px] bg-surface p-6 shadow-sm shadow-black/5 sm:flex-row sm:items-center">

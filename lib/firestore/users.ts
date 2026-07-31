@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import type { User } from "firebase/auth";
 import { requireFirestore } from "@/lib/firebase/firestore";
+import { consumePendingAccess } from "@/lib/firestore/pendingAccess";
 import type { UserProfile } from "@/types/user";
 import type { ProductId } from "@/types/access";
 
@@ -42,6 +43,18 @@ export async function createUserIfNotExists(user: User): Promise<boolean> {
 
   if (snap.exists()) return false;
 
+  // Best-effort: if an admin pre-granted this email via
+  // /admin/access → "Add Purchased Customer" before the customer ever
+  // signed in, apply it now. A failure here (e.g. no pending entry, or a
+  // transient read error) must never block account creation — the user
+  // still gets a normal account with no products, same as anyone else.
+  let pending: Awaited<ReturnType<typeof consumePendingAccess>> = null;
+  try {
+    pending = await consumePendingAccess(user.email);
+  } catch {
+    pending = null;
+  }
+
   await setDoc(ref, {
     uid: user.uid,
     displayName: user.displayName,
@@ -50,6 +63,10 @@ export async function createUserIfNotExists(user: User): Promise<boolean> {
     role: "parent",
     createdAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
+    products: {
+      learn: pending?.learn ?? false,
+      discovery: pending?.discovery ?? false,
+    },
   });
 
   return true;

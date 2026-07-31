@@ -77,7 +77,7 @@ export function ProductAccess() {
                   href={meta.href}
                   className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
                 >
-                  Open {meta.label} →
+                  Open Product →
                 </a>
               ) : (
                 <UpgradeCta productLabel={meta.label} />
@@ -103,9 +103,11 @@ function UpgradeCta({ productLabel }: { productLabel: string }) {
         title="Checkout isn't connected yet"
         className="inline-flex items-center gap-1.5 rounded-pill bg-secondary/70 px-3 py-1.5 text-xs font-semibold text-text/70 cursor-not-allowed"
       >
-        Upgrade to unlock {productLabel}
+        <Lock size={11} /> Unlock Access
       </button>
-      <p className="mt-1.5 text-[11px] text-text-muted">Checkout is coming soon.</p>
+      <p className="mt-1.5 text-[11px] text-text-muted">
+        {productLabel} isn&rsquo;t active on this account yet.
+      </p>
     </div>
   );
 }

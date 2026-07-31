@@ -23,6 +23,24 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
+    // True if the caller's own account is entitled to `product`
+    // ("learn" | "discovery"), checking BOTH access sources the app
+    // recognizes — same merge logic as hasProductAccess() in
+    // lib/firestore/access.ts, just enforced here so it can't be
+    // bypassed by any client (this app, learn.valiyo.id,
+    // discovery.valiyo.id, or a raw SDK call) that skips the UI-level
+    // check.
+    function hasProduct(product) {
+      return isSignedIn() && (
+        ( exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && product in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.products
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.products[product] == true )
+        ||
+        ( exists(/databases/$(database)/documents/user_access/$(request.auth.uid))
+          && product in get(/databases/$(database)/documents/user_access/$(request.auth.uid)).data.products )
+      );
+    }
+
     // users/{uid} — profile created/updated by the client on login.
     // Admins get a narrow bypass: they can look up any user (needed for
     // the email search in /admin/access) and update ONLY the `products`
@@ -45,6 +63,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // pending_access/{email} — an admin pre-authorizes a purchased
+    // customer by email BEFORE they've ever signed in (see
+    // /admin/access → "Add Purchased Customer"). Only admins can create
+    // or browse these. The one exception: a newly-signed-in user may
+    // read and delete the single entry matching their own verified auth
+    // email, so createUserIfNotExists() can consume it into their new
+    // users/{uid}.products on first login.
+    match /pending_access/{emailId} {
+      function ownsEmail() {
+        return isSignedIn() && request.auth.token.email != null
+          && request.auth.token.email.lower() == emailId;
+      }
+      allow get: if isAdmin() || ownsEmail();
+      allow list: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin() || ownsEmail();
+    }
+
     // children — owned by the parent who created them.
     match /children/{childId} {
       allow read, update, delete: if isSignedIn() && resource.data.parentUid == request.auth.uid;
@@ -57,17 +93,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // learn_progress — the Learn product writes progress for its own uid.
+    // learn_progress — the Learn product writes progress for its own uid,
+    // AND only while products.learn is granted. Without hasProduct('learn')
+    // here, anyone signed in could read/write their own progress rows
+    // regardless of purchase status — this is what actually gated the
+    // "both products open regardless of what's granted" bug, since it's
+    // enforced no matter which app (this one, or learn.valiyo.id) talks
+    // to Firestore.
     match /learn_progress/{progressId} {
-      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
-      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid && hasProduct('learn');
+      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid && hasProduct('learn');
       allow delete: if false;
     }
 
-    // discovery_results — the Discovery product writes results for its own uid.
+    // discovery_results — same entitlement gate as learn_progress above,
+    // for products.discovery.
     match /discovery_results/{resultId} {
-      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
-      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid && hasProduct('discovery');
+      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid && hasProduct('discovery');
       allow delete: if false;
     }
 
