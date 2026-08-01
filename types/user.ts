@@ -1,6 +1,6 @@
 import type { Timestamp } from "firebase/firestore";
 
-export type UserRole = "parent" | "admin";
+export type UserRole = "parent" | "admin" | "teacher";
 
 /**
  * Admin-managed product entitlements, stored inline on the user doc
