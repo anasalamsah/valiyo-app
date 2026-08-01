@@ -71,3 +71,21 @@ h3,
     scroll-behavior: auto !important;
   }
 }
+
+/* Print-only: used by /discovery/report. Has no effect on screen
+   rendering anywhere else in the app. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+  }
+  #discovery-report {
+    max-width: none;
+  }
+  #discovery-report * {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}

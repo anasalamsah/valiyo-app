@@ -97,7 +97,17 @@ export async function completeAssessment(
     updatedAt: serverTimestamp(),
     completedAt: serverTimestamp(),
   });
-  await deleteDraftAssessment(childId);
+
+  // Best-effort cleanup: the report above is already saved and valid at
+  // this point, so a failure here (e.g. a transient rules/network hiccup)
+  // must never surface as "analysis failed" to the caller — that would be
+  // wrong and confusing, since the real work already succeeded.
+  try {
+    await deleteDraftAssessment(childId);
+  } catch (err) {
+    console.error("Failed to clean up discovery draft (non-fatal):", err);
+  }
+
   return ref.id;
 }
 

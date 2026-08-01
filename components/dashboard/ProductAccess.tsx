@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Lock, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { hasProductAccess } from "@/lib/firestore/access";
@@ -73,12 +74,21 @@ export function ProductAccess() {
               </p>
 
               {unlocked ? (
-                <a
-                  href={meta.href}
-                  className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
-                >
-                  Open Product →
-                </a>
+                meta.href.startsWith("/") ? (
+                  <Link
+                    href={meta.href}
+                    className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
+                  >
+                    Open Product →
+                  </Link>
+                ) : (
+                  <a
+                    href={meta.href}
+                    className="mt-4 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
+                  >
+                    Open Product →
+                  </a>
+                )
               ) : (
                 <UpgradeCta productLabel={meta.label} />
               )}

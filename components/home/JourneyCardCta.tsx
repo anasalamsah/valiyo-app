@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Lock } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { hasProductAccess } from "@/lib/firestore/access";
@@ -40,11 +41,21 @@ export function JourneyCardCta({ step }: { step: JourneyStep }) {
     );
   }
 
+  const className = "mt-5 inline-block text-sm font-semibold text-primary transition-colors hover:text-primary-hover";
+
+  // Discovery is now an internal route; Learn is still an external
+  // subdomain until it's migrated too — use client-side navigation for
+  // the former, a plain anchor for the latter.
+  if (step.href.startsWith("/")) {
+    return (
+      <Link href={step.href} className={className}>
+        {step.ctaLabel}
+      </Link>
+    );
+  }
+
   return (
-    <a
-      href={step.href}
-      className="mt-5 inline-block text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
-    >
+    <a href={step.href} className={className}>
       {step.ctaLabel}
     </a>
   );
