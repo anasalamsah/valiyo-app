@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { requireFirestore } from "@/lib/firebase/firestore";
 import type {
   AssessmentAnswer,
@@ -117,4 +117,14 @@ export async function getAssessmentById(id: string): Promise<DiscoveryAssessment
   const snap = await getDoc(doc(db, COLLECTION, id));
   if (!snap.exists()) return null;
   return { id: snap.id, ...(snap.data() as Omit<DiscoveryAssessment, "id">) };
+}
+
+/**
+ * Records where the generated PDF for this report landed in Storage, so a
+ * second visit to the report can link straight to the existing file
+ * instead of regenerating and re-uploading it.
+ */
+export async function savePdfUrl(id: string, pdfUrl: string): Promise<void> {
+  const db = requireFirestore();
+  await updateDoc(doc(db, COLLECTION, id), { pdfUrl, updatedAt: serverTimestamp() });
 }
