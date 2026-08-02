@@ -216,12 +216,17 @@ export function ReportView({ id }: { id: string }) {
         </>
       )}
 
-      <Link
-        href="/dashboard"
-        className="no-print inline-block text-sm font-semibold text-primary hover:text-primary-hover"
-      >
-        ← Kembali ke Dashboard
-      </Link>
+      <div className="no-print flex flex-wrap gap-4">
+        <Link href="/dashboard" className="text-sm font-semibold text-primary hover:text-primary-hover">
+          ← Kembali ke Dashboard
+        </Link>
+        <Link
+          href="/discovery/history"
+          className="text-sm font-semibold text-text-muted hover:text-primary"
+        >
+          Lihat Riwayat Penilaian
+        </Link>
+      </div>
     </div>
   );
 }

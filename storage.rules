@@ -13,7 +13,7 @@ service firebase.storage {
         && request.auth.uid == uid
         && request.resource.size < 10 * 1024 * 1024
         && request.resource.contentType == 'application/pdf';
-      allow delete: if false;
+      allow delete: if request.auth != null && request.auth.uid == uid;
     }
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { DISCOVERY_QUESTIONS } from "@/config/discoveryQuestions";
 import {
@@ -27,10 +27,21 @@ const DOMAIN_BY_QUESTION_ID = new Map(DISCOVERY_QUESTIONS.map((q) => [q.id, q.do
 
 export function DiscoveryFlow() {
   const router = useRouter();
-  const { user, selectedChild } = useAuth();
-  const [step, setStep] = useState<Step>("child");
+  const searchParams = useSearchParams();
+  const { user, selectedChild, childProfiles, selectChild } = useAuth();
+
+  // History's "Duplicate" action links here as /discovery?childId=xyz — that
+  // child's draft (seeded from the duplicated report) is what the parent
+  // actually came here for, which may not match whichever child happens to
+  // be globally selected on the dashboard. When present and valid, it wins
+  // over the dashboard's selection and skips straight past the picker.
+  const requestedChildId = searchParams.get("childId");
+  const requestedChildIsValid =
+    !!requestedChildId && childProfiles.some((c) => c.id === requestedChildId);
+
+  const [step, setStep] = useState<Step>(requestedChildIsValid ? "profile" : "child");
   const [selectedChildId, setSelectedChildId] = useState<string | null>(
-    selectedChild?.id ?? null
+    requestedChildIsValid ? requestedChildId : (selectedChild?.id ?? null)
   );
   const [profile, setProfile] = useState<Partial<AssessmentChildProfile>>({});
   const [answers, setAnswers] = useState<Record<string, AssessmentAnswerValue>>({});
@@ -38,6 +49,15 @@ export function DiscoveryFlow() {
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  // Keep the dashboard's globally-selected child in sync when we arrived
+  // here via a specific childId link, so ChildSelector etc. reflect it too.
+  useEffect(() => {
+    if (requestedChildIsValid && requestedChildId) {
+      selectChild(requestedChildId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedChildIsValid, requestedChildId]);
 
   // Resume an in-progress draft when a child is picked.
   useEffect(() => {

@@ -1,4 +1,16 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { requireFirestore } from "@/lib/firebase/firestore";
 import type {
   AssessmentAnswer,
@@ -127,4 +139,54 @@ export async function getAssessmentById(id: string): Promise<DiscoveryAssessment
 export async function savePdfUrl(id: string, pdfUrl: string): Promise<void> {
   const db = requireFirestore();
   await updateDoc(doc(db, COLLECTION, id), { pdfUrl, updatedAt: serverTimestamp() });
+}
+
+/**
+ * Every completed assessment across all of this parent's children, most
+ * recent first. No server-side `orderBy` (same reasoning as everywhere
+ * else in this app — see lib/firestore/reports.ts): avoids needing a
+ * manually-created composite index, sorts the — typically small —
+ * result set in JS instead. Drafts (status "in_progress") are excluded;
+ * history only ever shows finished reports.
+ */
+export async function listAssessmentHistory(uid: string): Promise<DiscoveryAssessment[]> {
+  const db = requireFirestore();
+  const q = query(
+    collection(db, COLLECTION),
+    where("uid", "==", uid),
+    where("status", "==", "completed")
+  );
+  const snap = await getDocs(q);
+  const results = snap.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as Omit<DiscoveryAssessment, "id">),
+  }));
+  return results.sort(
+    (a, b) => (b.completedAt?.toMillis() ?? 0) - (a.completedAt?.toMillis() ?? 0)
+  );
+}
+
+/**
+ * "Duplicate Assessment": seeds a new in-progress draft for the same
+ * child from a past completed report's answers and profile snapshot, so
+ * the parent can quickly re-run an assessment (e.g. to track progress
+ * over time) by tweaking a few answers instead of starting all 30
+ * questions from scratch. Reuses saveDraftAssessment — the parent lands
+ * back in the normal /discovery flow to review/adjust before analyzing.
+ */
+export async function duplicateAssessmentAsDraft(report: DiscoveryAssessment): Promise<void> {
+  await saveDraftAssessment(
+    report.uid,
+    report.childId,
+    report.answers,
+    report.childProfileSnapshot
+  );
+}
+
+/** Permanently deletes a completed assessment. Does not touch its PDF in
+ * Storage (if any) — callers that also want that cleaned up should call
+ * deleteDiscoveryPdf from lib/pdf/generateDiscoveryPdf separately. */
+export async function deleteCompletedAssessment(id: string): Promise<void> {
+  const db = requireFirestore();
+  await deleteDoc(doc(db, COLLECTION, id));
 }
