@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/discovery"];
+const PROTECTED_PREFIXES = ["/dashboard", "/admin", "/discovery", "/learn"];
 const SESSION_MARKER_COOKIE = "valiyo_signed_in";
 
 /**
@@ -45,5 +45,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*", "/discovery/:path*"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/discovery/:path*", "/learn/:path*"],
 };
