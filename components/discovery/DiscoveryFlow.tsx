@@ -10,7 +10,7 @@ import {
   saveDraftAssessment,
 } from "@/lib/firestore/discovery";
 import { analyzeDiscovery } from "@/lib/ai/analyzeDiscoveryAction";
-import { ChildPicker } from "@/components/discovery/ChildPicker";
+import { ChildPicker } from "@/components/shared/ChildPicker";
 import { ProfileStep } from "@/components/discovery/ProfileStep";
 import { QuestionnaireStep } from "@/components/discovery/QuestionnaireStep";
 import { ReviewStep } from "@/components/discovery/ReviewStep";
@@ -147,6 +147,9 @@ export function DiscoveryFlow() {
         selectedChildId={selectedChildId}
         onSelect={setSelectedChildId}
         onContinue={() => setStep("profile")}
+        stepLabel="Langkah 1 dari 4"
+        description="Pilih profil anak yang akan dinilai dalam sesi Discovery ini."
+        emptyStateDescription="Tambahkan profil anak dulu di dashboard sebelum memulai Discovery."
       />
     );
   }

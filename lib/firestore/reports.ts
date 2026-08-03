@@ -28,6 +28,25 @@ export async function listLearnProgress(childId: string): Promise<LearnProgress[
 }
 
 /**
+ * All course progress across every child belonging to this parent account,
+ * most recently active first. Powers the /learn Student Dashboard so a
+ * parent with multiple kids sees everyone's activity in one place, not
+ * just whichever child happens to be selected.
+ */
+export async function listLearnProgressForParent(uid: string): Promise<LearnProgress[]> {
+  const db = requireFirestore();
+  const q = query(collection(db, "learn_progress"), where("uid", "==", uid));
+  const snap = await getDocs(q);
+  const results = snap.docs.map((d) => ({
+    id: d.id,
+    ...(d.data() as Omit<LearnProgress, "id">),
+  }));
+  return results.sort(
+    (a, b) => (b.lastActivityAt?.toMillis() ?? 0) - (a.lastActivityAt?.toMillis() ?? 0)
+  );
+}
+
+/**
  * Discovery test results for a child, most recently completed first.
  */
 export async function listDiscoveryResults(childId: string): Promise<DiscoveryResult[]> {

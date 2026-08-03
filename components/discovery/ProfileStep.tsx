@@ -4,19 +4,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
+import { ageFromBirthDate } from "@/lib/utils/age";
 import type { AssessmentChildProfile, ChildGenderLabel } from "@/types/discoveryAssessment";
 import type { ChildGender } from "@/types/child";
-
-function ageFromBirthDate(birthDate: string | null): number | null {
-  if (!birthDate) return null;
-  const birth = new Date(birthDate);
-  if (Number.isNaN(birth.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const monthDiff = now.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate())) age -= 1;
-  return Math.max(age, 0);
-}
 
 const GENDER_MAP: Record<ChildGender, ChildGenderLabel> = {
   male: "Laki-laki",
