@@ -6,6 +6,7 @@ import { getMissionsForAcademy } from "@/config/learnAcademies";
 import { getAcademyProgress } from "@/lib/firestore/learnProgress";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import { QuizFlow } from "@/components/learn/quiz/QuizFlow";
+import { CodingQuestFlow } from "@/components/learn/quiz/CodingQuestFlow";
 import { cn } from "@/lib/utils/cn";
 import type { AcademyData, MissionData } from "@/types/learnAcademy";
 
@@ -28,23 +29,33 @@ export function AcademyDetailView({
   const fetcher = useCallback(() => getAcademyProgress(childId, academy.id), [childId, academy.id]);
   const { data: progress, loading, refresh } = useAsyncData(fetcher, [childId, academy.id]);
 
-  // Coding Quest missions (Logic Academy) need the mission-based game
-  // engine, not the multiple-choice quiz — that's a separate milestone.
-  // Every other category's question bank already exists and is playable.
-  const isQuizPlayable = academy.category !== "Coding Quest" && !academy.isComingSoon;
+  const isPlayable = !academy.isComingSoon;
+  const isCodingQuest = academy.category === "Coding Quest";
 
   if (activeMission) {
-    return (
+    const exitProps = {
+      onExit: () => {
+        setActiveMission(null);
+        refresh();
+      },
+    };
+    return isCodingQuest ? (
+      <CodingQuestFlow
+        academy={academy}
+        mission={activeMission}
+        childId={childId}
+        childName={childName}
+        childAge={childAge}
+        {...exitProps}
+      />
+    ) : (
       <QuizFlow
         academy={academy}
         mission={activeMission}
         childId={childId}
         childName={childName}
         childAge={childAge}
-        onExit={() => {
-          setActiveMission(null);
-          refresh();
-        }}
+        {...exitProps}
       />
     );
   }
@@ -118,7 +129,7 @@ export function AcademyDetailView({
                 </div>
               </div>
 
-              {isQuizPlayable ? (
+              {isPlayable ? (
                 <button
                   type="button"
                   onClick={() => setActiveMission(mission)}
