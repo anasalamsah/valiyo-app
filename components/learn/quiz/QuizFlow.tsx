@@ -18,15 +18,19 @@ type AnswerHistoryItem = {
 };
 
 /**
- * Only TK A / TK B levels have real question content so far (see
- * config/learnQuestions.ts) — approximated here from the child's age
- * until academies support an explicit grade-level picker.
+ * Maps a child's age to their content level. TK B (Advanced) is
+ * intentionally not an age-mapped tier (by product decision) — its
+ * content still exists in the bank but isn't auto-assigned.
  */
 function levelForAge(age: number): Level {
-  if (age <= 4) return "TK A";
+  if (age <= 2) return "Preschool 1 (2 thn)";
+  if (age === 3) return "Preschool 2 (3 thn)";
+  if (age === 4) return "TK A";
   if (age === 5) return "TK A (Advanced)";
   if (age === 6) return "TK B";
-  return "TK B (Advanced)";
+  if (age >= 12) return "SD Kelas 6";
+  // age 7-11 -> SD Kelas 1-5
+  return `SD Kelas ${age - 6}` as Level;
 }
 
 export function QuizFlow({
@@ -47,9 +51,10 @@ export function QuizFlow({
   const { user } = useAuth();
   const level = levelForAge(childAge);
 
-  const [questions] = useState(() =>
+  const [sessionResult] = useState(() =>
     getRandomSessionQuestions(level, academy.category, mission.questionCount)
   );
+  const questions = sessionResult.ok ? sessionResult.questions : [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -96,6 +101,23 @@ export function QuizFlow({
     } else {
       setCurrentIndex(nextIndex);
     }
+  }
+
+  if (!sessionResult.ok) {
+    return (
+      <div className="rounded-[28px] bg-surface p-7 text-center shadow-sm shadow-black/5">
+        <p className="text-sm text-text-muted">
+          Misi ini belum tersedia untuk level {level}. Coba pilih akademi atau misi lain ya! 😊
+        </p>
+        <button
+          type="button"
+          onClick={onExit}
+          className="mt-4 text-sm font-semibold text-primary hover:text-primary-hover"
+        >
+          Kembali
+        </button>
+      </div>
+    );
   }
 
   if (finished) {

@@ -8,11 +8,22 @@ import { CodingQuestSession } from "@/components/learn/quiz/CodingQuestSession";
 import { CodingQuestResult } from "@/components/learn/quiz/CodingQuestResult";
 import type { AcademyData, CodingSkillType, Level, MissionData } from "@/types/learnAcademy";
 
+/**
+ * Maps a child's age to their content level. Kept in sync with the copy in
+ * QuizFlow.tsx. TK B (Advanced) is intentionally not an age-mapped tier —
+ * its content still exists in the bank but isn't auto-assigned. Coding
+ * Quest activities currently only exist for TK A/A(Adv)/B/B(Adv), so ages
+ * mapping into SD Kelas 1-6 will see the graceful "not available yet"
+ * state below until that content is authored in a future batch.
+ */
 function levelForAge(age: number): Level {
-  if (age <= 4) return "TK A";
+  if (age <= 2) return "Preschool 1 (2 thn)";
+  if (age === 3) return "Preschool 2 (3 thn)";
+  if (age === 4) return "TK A";
   if (age === 5) return "TK A (Advanced)";
   if (age === 6) return "TK B";
-  return "TK B (Advanced)";
+  if (age >= 12) return "SD Kelas 6";
+  return `SD Kelas ${age - 6}` as Level;
 }
 
 type ResultData = {

@@ -1,5 +1,13 @@
 import type { Level, CodingActivity } from "@/types/learnAcademy";
 
+/**
+ * Ported from the (now-retired) external Learn app's codingQuestBank.ts.
+ * getCodingActivitiesByLevel() below has been fixed to never backfill from
+ * another level (it used to silently pad short/empty results with
+ * wrong-level activities) — see the function for details. Content itself
+ * (TK A/A(Adv)/B/B(Adv) only) is unchanged; SD Kelas 1-6 Coding Quest
+ * activities are a future batch.
+ */
 export const CODING_QUEST_BANK: CodingActivity[] = [
   // -------------------------------------------------------------
   // TK A Activities
@@ -607,13 +615,22 @@ export const CODING_QUEST_BANK: CodingActivity[] = [
   }
 ];
 
-export function getCodingActivitiesByLevel(level: Level): CodingActivity[] {
-  // Filter activities matching the exact level, fallback to TK A if empty
-  const matched = CODING_QUEST_BANK.filter((act) => act.level === level);
-  if (matched.length >= 10) return matched.slice(0, 10);
+// Number of real Coding Quest activities available for a given level, no padding.
+export function getAvailableCodingActivityCount(level: Level): number {
+  return CODING_QUEST_BANK.filter((act) => act.level === level).length;
+}
 
-  // If fewer than 10, fill with other levels
-  const others = CODING_QUEST_BANK.filter((act) => act.level !== level);
-  const combined = [...matched, ...others];
-  return combined.slice(0, 10);
+// Levels that actually have at least one Coding Quest activity.
+export function getLevelsWithCodingActivities(): Level[] {
+  return Array.from(new Set(CODING_QUEST_BANK.map((act) => act.level)));
+}
+
+// Get activities for a given level. STRICT: only returns activities matching
+// the exact requested level. Never falls back to another level — if there
+// are fewer than 10 (or none), the caller receives that real, shorter (or
+// empty) list rather than a session silently padded with wrong-level
+// activities. CodingQuestFlow already renders a graceful "not available yet"
+// state when the returned array is empty.
+export function getCodingActivitiesByLevel(level: Level): CodingActivity[] {
+  return CODING_QUEST_BANK.filter((act) => act.level === level).slice(0, 10);
 }
