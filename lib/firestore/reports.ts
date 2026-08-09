@@ -13,10 +13,21 @@ import type { DiscoveryResult, LearnProgress, ReportItem } from "@/types/learnin
 
 /**
  * Course-by-course progress for a child, most recently active first.
+ *
+ * `uid` is required alongside `childId`: firestore.rules' `allow read` for
+ * `learn_progress` checks `resource.data.uid == request.auth.uid`, and for
+ * a `list` query Firestore only permits that when the query itself proves
+ * it via a matching `where("uid", "==", ...)` clause — otherwise the whole
+ * query is rejected, not just filtered. Without it here, this always came
+ * back empty (or errored) even when progress had been saved successfully.
  */
-export async function listLearnProgress(childId: string): Promise<LearnProgress[]> {
+export async function listLearnProgress(uid: string, childId: string): Promise<LearnProgress[]> {
   const db = requireFirestore();
-  const q = query(collection(db, "learn_progress"), where("childId", "==", childId));
+  const q = query(
+    collection(db, "learn_progress"),
+    where("uid", "==", uid),
+    where("childId", "==", childId)
+  );
   const snap = await getDocs(q);
   const results = snap.docs.map((d) => ({
     id: d.id,

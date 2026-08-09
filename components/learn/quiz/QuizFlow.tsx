@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { getRandomSessionQuestions } from "@/config/learnQuestions";
 import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
+import { resolveChildLevel } from "@/lib/learn/levelResolution";
 import { QuizSession } from "@/components/learn/quiz/QuizSession";
 import { QuizResultScreen } from "@/components/learn/quiz/QuizResultScreen";
 import type { AcademyData, MissionData } from "@/types/learnAcademy";
-import type { Level } from "@/types/learnAcademy";
 
 type AnswerHistoryItem = {
   questionId: string;
@@ -16,22 +16,6 @@ type AnswerHistoryItem = {
   correctAnswer: string;
   isCorrect: boolean;
 };
-
-/**
- * Maps a child's age to their content level. TK B (Advanced) is
- * intentionally not an age-mapped tier (by product decision) — its
- * content still exists in the bank but isn't auto-assigned.
- */
-function levelForAge(age: number): Level {
-  if (age <= 2) return "Preschool 1 (2 thn)";
-  if (age === 3) return "Preschool 2 (3 thn)";
-  if (age === 4) return "TK A";
-  if (age === 5) return "TK A (Advanced)";
-  if (age === 6) return "TK B";
-  if (age >= 12) return "SD Kelas 6";
-  // age 7-11 -> SD Kelas 1-5
-  return `SD Kelas ${age - 6}` as Level;
-}
 
 export function QuizFlow({
   academy,
@@ -49,7 +33,7 @@ export function QuizFlow({
   onExit: () => void;
 }) {
   const { user } = useAuth();
-  const level = levelForAge(childAge);
+  const level = resolveChildLevel(childId, childAge);
 
   const [sessionResult] = useState(() =>
     getRandomSessionQuestions(level, academy.category, mission.questionCount)

@@ -1,12 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { ACADEMIES } from "@/config/learnAcademies";
 import { cn } from "@/lib/utils/cn";
+import {
+  OVERRIDE_AGE_OPTIONS,
+  getLevelOverrideAge,
+  levelForAge,
+  setLevelOverrideAge,
+} from "@/lib/learn/levelResolution";
 import type { AcademyData } from "@/types/learnAcademy";
 
-export function AcademyGrid({ onSelect }: { onSelect: (academy: AcademyData) => void }) {
+export function AcademyGrid({
+  onSelect,
+  childId,
+  childAge,
+}: {
+  onSelect: (academy: AcademyData) => void;
+  childId: string;
+  childAge: number;
+}) {
+  const [overrideAge, setOverrideAge] = useState<number | null>(() => getLevelOverrideAge(childId));
+  const effectiveAge = overrideAge ?? childAge;
+  const effectiveLevel = levelForAge(effectiveAge);
+
+  function handleAgeChange(value: string) {
+    const nextAge = value === "auto" ? null : Number(value);
+    setLevelOverrideAge(childId, nextAge);
+    setOverrideAge(nextAge);
+  }
+
   return (
     <div>
       <div className="flex items-start justify-between gap-4">
@@ -23,6 +48,35 @@ export function AcademyGrid({ onSelect }: { onSelect: (academy: AcademyData) => 
         >
           Lihat Progres
         </Link>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
+        <div className="flex-1 min-w-[180px]">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+            Level soal saat ini
+          </p>
+          <p className="text-sm font-semibold text-text">
+            {effectiveLevel}
+            {overrideAge === null && (
+              <span className="ml-1.5 font-normal text-text-muted">(otomatis dari tanggal lahir)</span>
+            )}
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-xs font-medium text-text-muted">
+          Usia untuk soal
+          <select
+            value={overrideAge === null ? "auto" : String(overrideAge)}
+            onChange={(e) => handleAgeChange(e.target.value)}
+            className="rounded-xl border border-border bg-bg px-2.5 py-1.5 text-sm font-semibold text-text"
+          >
+            <option value="auto">Otomatis (usia {childAge} thn)</option>
+            {OVERRIDE_AGE_OPTIONS.map((opt) => (
+              <option key={opt.age} value={opt.age}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

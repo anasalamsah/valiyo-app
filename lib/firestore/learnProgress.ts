@@ -12,14 +12,25 @@ import type { LearnProgress } from "@/types/learning";
  * that collection later once the actual quiz/mission-scoring engine
  * exists to produce them. Returns null if nothing recorded yet (never
  * fabricated placeholder numbers).
+ *
+ * `uid` is required (not just childId/academyId) because firestore.rules'
+ * `allow read` for this collection checks `resource.data.uid ==
+ * request.auth.uid` — for a `list`/query call (as opposed to a single-doc
+ * get), Firestore can only allow that when the query itself includes a
+ * `where("uid", "==", ...)` clause proving every possible match satisfies
+ * the rule. Without it, the whole query is rejected outright (not merely
+ * filtered), which is why progress silently always read back as empty/0%
+ * even though saveAcademyProgress had written it successfully.
  */
 export async function getAcademyProgress(
+  uid: string,
   childId: string,
   academyId: string
 ): Promise<LearnProgress | null> {
   const db = requireFirestore();
   const q = query(
     collection(db, "learn_progress"),
+    where("uid", "==", uid),
     where("childId", "==", childId),
     where("courseId", "==", academyId)
   );
@@ -43,7 +54,7 @@ export async function saveAcademyProgress(
   score: number
 ): Promise<void> {
   const db = requireFirestore();
-  const existing = await getAcademyProgress(childId, academyId);
+  const existing = await getAcademyProgress(uid, childId, academyId);
 
   if (!existing) {
     await addDoc(collection(db, "learn_progress"), {

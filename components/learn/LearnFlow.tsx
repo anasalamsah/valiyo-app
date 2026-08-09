@@ -31,9 +31,10 @@ export function LearnFlow() {
     );
   }
 
+  const child = childProfiles.find((c) => c.id === selectedChildId);
+  const childAge = ageFromBirthDate(child?.birthDate ?? null) ?? 5;
+
   if (step === "detail" && activeAcademy) {
-    const child = childProfiles.find((c) => c.id === selectedChildId);
-    const childAge = ageFromBirthDate(child?.birthDate ?? null) ?? 5;
     return (
       <AcademyDetailView
         academy={activeAcademy}
@@ -47,6 +48,8 @@ export function LearnFlow() {
 
   return (
     <AcademyGrid
+      childId={selectedChildId}
+      childAge={childAge}
       onSelect={(academy) => {
         setActiveAcademy(academy);
         setStep("detail");

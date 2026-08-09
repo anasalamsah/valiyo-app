@@ -8,18 +8,18 @@ import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import { LockedSection } from "@/components/dashboard/LockedSection";
 
 export function ContinueLearning() {
-  const { access, profile, selectedChild } = useAuth();
+  const { access, profile, selectedChild, user } = useAuth();
   const unlocked = hasProductAccess(access, profile, "learn");
 
   const fetcher = useCallback(() => {
-    if (!selectedChild) return Promise.resolve([]);
-    return listLearnProgress(selectedChild.id);
-  }, [selectedChild]);
+    if (!user || !selectedChild) return Promise.resolve([]);
+    return listLearnProgress(user.uid, selectedChild.id);
+  }, [user, selectedChild]);
 
   const { data, loading, error } = useAsyncData(
     fetcher,
-    [selectedChild?.id],
-    unlocked && Boolean(selectedChild)
+    [user?.uid, selectedChild?.id],
+    unlocked && Boolean(user) && Boolean(selectedChild)
   );
 
   if (!unlocked) {

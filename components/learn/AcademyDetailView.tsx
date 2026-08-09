@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Lock, Play, Star, Target } from "lucide-react";
 import { getMissionsForAcademy } from "@/config/learnAcademies";
 import { getAcademyProgress } from "@/lib/firestore/learnProgress";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { QuizFlow } from "@/components/learn/quiz/QuizFlow";
 import { CodingQuestFlow } from "@/components/learn/quiz/CodingQuestFlow";
 import { cn } from "@/lib/utils/cn";
@@ -23,11 +24,15 @@ export function AcademyDetailView({
   childAge: number;
   onBack: () => void;
 }) {
+  const { user } = useAuth();
   const missions = getMissionsForAcademy(academy.category);
   const [activeMission, setActiveMission] = useState<MissionData | null>(null);
 
-  const fetcher = useCallback(() => getAcademyProgress(childId, academy.id), [childId, academy.id]);
-  const { data: progress, loading, refresh } = useAsyncData(fetcher, [childId, academy.id]);
+  const fetcher = useCallback(() => {
+    if (!user) return Promise.resolve(null);
+    return getAcademyProgress(user.uid, childId, academy.id);
+  }, [user, childId, academy.id]);
+  const { data: progress, loading, refresh } = useAsyncData(fetcher, [user?.uid, childId, academy.id], Boolean(user));
 
   const isPlayable = !academy.isComingSoon;
   const isCodingQuest = academy.category === "Coding Quest";
