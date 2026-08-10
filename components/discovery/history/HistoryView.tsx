@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, ArrowUpDown, Copy, Trash2, FileText, ExternalLink } from "lucide-react";
+import { Search, ArrowUpDown, Copy, Trash2, FileText } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { hasProductAccess } from "@/lib/firestore/access";
 import { LockedSection } from "@/components/dashboard/LockedSection";
@@ -12,7 +12,6 @@ import {
   duplicateAssessmentAsDraft,
   listAssessmentHistory,
 } from "@/lib/firestore/discovery";
-import { deleteDiscoveryPdf } from "@/lib/pdf/generateDiscoveryPdf";
 import { cn } from "@/lib/utils/cn";
 import type { DiscoveryAssessment } from "@/types/discoveryAssessment";
 
@@ -94,9 +93,6 @@ export function HistoryView() {
     setActionError(null);
     try {
       await deleteCompletedAssessment(report.id);
-      if (report.pdfUrl) {
-        await deleteDiscoveryPdf(report.uid, report.id);
-      }
       setReports((prev) => prev?.filter((r) => r.id !== report.id) ?? null);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Gagal menghapus.");
@@ -227,23 +223,6 @@ export function HistoryView() {
                     >
                       <FileText size={12} /> Lihat Laporan
                     </Link>
-                    {report.pdfUrl ? (
-                      <a
-                        href={report.pdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-pill border border-border px-3 py-1.5 text-xs font-semibold text-text transition-colors hover:border-primary/40"
-                      >
-                        <ExternalLink size={12} /> Buka PDF
-                      </a>
-                    ) : (
-                      <span
-                        className="inline-flex items-center gap-1.5 rounded-pill bg-black/5 px-3 py-1.5 text-xs font-semibold text-text-muted"
-                        title="Buka laporan lalu klik 'Buat PDF' untuk generate"
-                      >
-                        PDF belum dibuat
-                      </span>
-                    )}
                     <button
                       type="button"
                       disabled={isPending}

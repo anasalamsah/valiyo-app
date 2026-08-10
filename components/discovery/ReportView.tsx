@@ -13,7 +13,6 @@ import { LearningStyleCard } from "@/components/discovery/report/LearningStyleCa
 import { ActivitiesSection } from "@/components/discovery/report/ActivitiesSection";
 import { NextStepsSection } from "@/components/discovery/report/NextStepsSection";
 import { RoadmapSection, AiGrowthInsight } from "@/components/discovery/report/RoadmapSection";
-import { DownloadPdfButton } from "@/components/discovery/DownloadPdfButton";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -93,11 +92,10 @@ export function ReportView({ id }: { id: string }) {
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center justify-center gap-2 rounded-pill border border-primary/30 bg-surface px-5 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-pill bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
           >
-            <Printer size={14} /> Cetak
+            <Printer size={14} /> Cetak / Simpan sebagai PDF
           </button>
-          <DownloadPdfButton report={report} />
         </div>
       </motion.div>
 

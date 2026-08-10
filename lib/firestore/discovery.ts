@@ -183,9 +183,10 @@ export async function duplicateAssessmentAsDraft(report: DiscoveryAssessment): P
   );
 }
 
-/** Permanently deletes a completed assessment. Does not touch its PDF in
- * Storage (if any) — callers that also want that cleaned up should call
- * deleteDiscoveryPdf from lib/pdf/generateDiscoveryPdf separately. */
+/** Permanently deletes a completed assessment. Reports no longer have a
+ * generated file in Storage to clean up alongside this — PDF export is
+ * done client-side via the browser's print dialog (see ReportView.tsx's
+ * "Cetak / Simpan sebagai PDF" button), not a stored file. */
 export async function deleteCompletedAssessment(id: string): Promise<void> {
   const db = requireFirestore();
   await deleteDoc(doc(db, COLLECTION, id));
