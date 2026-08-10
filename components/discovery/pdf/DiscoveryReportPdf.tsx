@@ -219,25 +219,39 @@ export function DiscoveryReportPdf({
         <Page size="A4" style={styles.page}>
           <Text style={styles.sectionTitle}>Peta Jalan 90 Hari Pertama</Text>
 
-          <Text style={styles.cardTitle}>Minggu Ini: {report.roadmap.phase1ThisWeek.goal}</Text>
-          {report.roadmap.phase1ThisWeek.actions.map((action, i) => (
-            <Text key={i} style={styles.bullet}>
-              • {action}
-            </Text>
-          ))}
+          {report.roadmap.phase1ThisWeek && (
+            <>
+              <Text style={styles.cardTitle}>
+                Minggu Ini: {report.roadmap.phase1ThisWeek.goal}
+              </Text>
+              {(report.roadmap.phase1ThisWeek.actions ?? []).map((action, i) => (
+                <Text key={i} style={styles.bullet}>
+                  • {action}
+                </Text>
+              ))}
+            </>
+          )}
 
-          <Text style={[styles.cardTitle, { marginTop: 10 }]}>
-            Bulan 1-3: {report.roadmap.phase2Month1To3.goal}
-          </Text>
-          {report.roadmap.phase2Month1To3.activities.map((item, i) => (
-            <View key={i} style={styles.card}>
-              <Text style={styles.cardTitle}>{item.activity}</Text>
-              <Text style={styles.cardBody}>{item.why}</Text>
-            </View>
-          ))}
+          {report.roadmap.phase2Month1To3 && (
+            <>
+              <Text style={[styles.cardTitle, { marginTop: 10 }]}>
+                Bulan 1-3: {report.roadmap.phase2Month1To3.goal}
+              </Text>
+              {(report.roadmap.phase2Month1To3.activities ?? []).map((item, i) => (
+                <View key={i} style={styles.card}>
+                  <Text style={styles.cardTitle}>{item.activity}</Text>
+                  <Text style={styles.cardBody}>{item.why}</Text>
+                </View>
+              ))}
+            </>
+          )}
 
-          <Text style={styles.sectionTitle}>Kesimpulan AI</Text>
-          <Text style={styles.paragraph}>{report.roadmap.aiInsight.summaryText}</Text>
+          {report.roadmap.aiInsight && (
+            <>
+              <Text style={styles.sectionTitle}>Kesimpulan AI</Text>
+              <Text style={styles.paragraph}>{report.roadmap.aiInsight.summaryText}</Text>
+            </>
+          )}
 
           <Footer pageLabel={child?.name ?? "Laporan"} />
         </Page>
