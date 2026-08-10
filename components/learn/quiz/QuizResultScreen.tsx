@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, CheckCircle2, Home, RefreshCw, Trophy, XCircle } from "lucide-react";
+import { BarChart3, CheckCircle2, Home, RefreshCw, Trophy, XCircle, Zap } from "lucide-react";
 import { audioManager } from "@/lib/learn/audioManager";
 import { getQuestionImage } from "@/lib/learn/imageMapper";
 import { Confetti } from "@/components/learn/Confetti";
@@ -36,6 +36,7 @@ export function QuizResultScreen({
   correctAnswersCount,
   incorrectAnswersCount,
   answersHistory,
+  xpEarned,
   onRestartSession,
   onGoHome,
 }: {
@@ -46,6 +47,8 @@ export function QuizResultScreen({
   correctAnswersCount: number;
   incorrectAnswersCount: number;
   answersHistory: AnswerHistoryItem[];
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  xpEarned?: number;
   onRestartSession: () => void;
   onGoHome: () => void;
 }) {
@@ -85,6 +88,12 @@ export function QuizResultScreen({
             <span className="font-display text-6xl font-extrabold text-primary sm:text-7xl">{score}</span>
             <span className="text-2xl font-bold text-text-muted">/ 100</span>
           </div>
+          {typeof xpEarned === "number" && (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-4 py-1.5 text-sm font-bold text-text">
+              <Zap size={14} className="text-secondary" fill="currentColor" />
+              +{xpEarned} XP
+            </div>
+          )}
         </div>
 
         <div className={`rounded-[24px] p-4 text-center ${motivation.bg}`}>

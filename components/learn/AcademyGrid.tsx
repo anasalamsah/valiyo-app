@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { Lock, Zap } from "lucide-react";
 import { ACADEMIES } from "@/config/learnAcademies";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -11,6 +11,9 @@ import {
   levelForAge,
   setLevelOverrideAge,
 } from "@/lib/learn/levelResolution";
+import { isFeatureEnabled } from "@/config/featureFlags";
+import { getChildGamification } from "@/lib/firestore/gamification";
+import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import type { AcademyData } from "@/types/learnAcademy";
 
 export function AcademyGrid({
@@ -25,6 +28,10 @@ export function AcademyGrid({
   const [overrideAge, setOverrideAge] = useState<number | null>(() => getLevelOverrideAge(childId));
   const effectiveAge = overrideAge ?? childAge;
   const effectiveLevel = levelForAge(effectiveAge);
+
+  const xpEnabled = isFeatureEnabled("gamificationXp");
+  const gamificationFetcher = useCallback(() => getChildGamification(childId), [childId]);
+  const { data: gamification } = useAsyncData(gamificationFetcher, [childId], xpEnabled);
 
   function handleAgeChange(value: string) {
     const nextAge = value === "auto" ? null : Number(value);
@@ -42,12 +49,20 @@ export function AcademyGrid({
             Setiap akademi punya misi belajar sendiri, sesuai minat anak.
           </p>
         </div>
-        <Link
-          href="/learn/progress"
-          className="shrink-0 text-xs font-semibold text-text-muted transition-colors hover:text-primary"
-        >
-          Lihat Progres
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {xpEnabled && gamification && (
+            <div className="inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-3 py-1 text-xs font-bold text-text">
+              <Zap size={12} className="text-secondary" fill="currentColor" />
+              {gamification.totalXp} XP
+            </div>
+          )}
+          <Link
+            href="/learn/progress"
+            className="text-xs font-semibold text-text-muted transition-colors hover:text-primary"
+          >
+            Lihat Progres
+          </Link>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">

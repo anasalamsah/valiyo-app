@@ -16,6 +16,8 @@ interface CodingQuestResultProps {
   puzzlePieces: number;
   starsEarned: number;
   unlockedRobots: string[];
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  xpEarned?: number;
   onRestartSession: () => void;
   onGoHome: () => void;
 }
@@ -30,6 +32,7 @@ export function CodingQuestResult({
   puzzlePieces,
   starsEarned,
   unlockedRobots,
+  xpEarned,
   onRestartSession,
   onGoHome,
 }: CodingQuestResultProps) {
@@ -108,6 +111,15 @@ export function CodingQuestResult({
             </span>
           </div>
         </div>
+
+        {typeof xpEarned === "number" && (
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/20 px-4 py-1.5 text-sm font-bold text-purple-950">
+              <Zap size={14} className="text-secondary" fill="currentColor" />
+              +{xpEarned} XP
+            </div>
+          </div>
+        )}
 
         {/* AI Summary Section */}
         <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-3xl p-6 shadow-md border-2 border-purple-700">

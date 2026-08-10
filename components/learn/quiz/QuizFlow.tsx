@@ -5,6 +5,9 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { getRandomSessionQuestions } from "@/config/learnQuestions";
 import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
 import { resolveChildLevel } from "@/lib/learn/levelResolution";
+import { isFeatureEnabled } from "@/config/featureFlags";
+import { calculateMissionXp } from "@/lib/learn/gamification/xpCalculator";
+import { awardXp } from "@/lib/firestore/gamification";
 import { QuizSession } from "@/components/learn/quiz/QuizSession";
 import { QuizResultScreen } from "@/components/learn/quiz/QuizResultScreen";
 import type { AcademyData, MissionData } from "@/types/learnAcademy";
@@ -46,6 +49,7 @@ export function QuizFlow({
   const [history, setHistory] = useState<AnswerHistoryItem[]>([]);
   const [finished, setFinished] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [xpEarned, setXpEarned] = useState<number | null>(null);
 
   const sessionKey = `${academy.id}-${mission.id}`;
 
@@ -78,6 +82,19 @@ export function QuizFlow({
         setSaved(true);
         try {
           await saveAcademyProgress(user.uid, childId, academy.id, academy.title, newScore);
+
+          if (isFeatureEnabled("gamificationXp")) {
+            try {
+              const xp = calculateMissionXp(newCorrect, questions.length);
+              setXpEarned(xp);
+              await awardXp(user.uid, childId, xp);
+            } catch (xpErr) {
+              // Gamification is an enhancement, not a dependency of the
+              // core learning experience — an XP failure must never affect
+              // the (already-saved) mission progress or the result screen.
+              console.error("Failed to award XP (non-fatal):", xpErr);
+            }
+          }
         } catch (err) {
           console.error("Failed to save academy progress:", err);
         }
@@ -114,6 +131,7 @@ export function QuizFlow({
         correctAnswersCount={correctCount}
         incorrectAnswersCount={incorrectCount}
         answersHistory={history}
+        xpEarned={xpEarned ?? undefined}
         onRestartSession={onExit}
         onGoHome={onExit}
       />

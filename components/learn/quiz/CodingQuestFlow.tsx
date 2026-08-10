@@ -5,6 +5,9 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { getCodingActivitiesByLevel } from "@/config/learnCodingQuestBank";
 import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
 import { resolveChildLevel } from "@/lib/learn/levelResolution";
+import { isFeatureEnabled } from "@/config/featureFlags";
+import { calculateMissionXp } from "@/lib/learn/gamification/xpCalculator";
+import { awardXp } from "@/lib/firestore/gamification";
 import { CodingQuestSession } from "@/components/learn/quiz/CodingQuestSession";
 import { CodingQuestResult } from "@/components/learn/quiz/CodingQuestResult";
 import type { AcademyData, CodingSkillType, MissionData } from "@/types/learnAcademy";
@@ -42,6 +45,7 @@ export function CodingQuestFlow({
   );
   const [result, setResult] = useState<ResultData | null>(null);
   const [saved, setSaved] = useState(false);
+  const [xpEarned, setXpEarned] = useState<number | null>(null);
 
   async function handleFinish(
     score: number,
@@ -58,6 +62,16 @@ export function CodingQuestFlow({
       setSaved(true);
       try {
         await saveAcademyProgress(user.uid, childId, academy.id, academy.title, score);
+
+        if (isFeatureEnabled("gamificationXp")) {
+          try {
+            const xp = calculateMissionXp(correctCount, totalCount);
+            setXpEarned(xp);
+            await awardXp(user.uid, childId, xp);
+          } catch (xpErr) {
+            console.error("Failed to award XP (non-fatal):", xpErr);
+          }
+        }
       } catch (err) {
         console.error("Failed to save academy progress:", err);
       }
@@ -76,6 +90,7 @@ export function CodingQuestFlow({
         puzzlePieces={result.puzzlePieces}
         starsEarned={result.starsEarned}
         unlockedRobots={result.unlockedRobots}
+        xpEarned={xpEarned ?? undefined}
         onRestartSession={onExit}
         onGoHome={onExit}
       />
