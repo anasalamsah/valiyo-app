@@ -7,6 +7,8 @@ import { audioManager } from "@/lib/learn/audioManager";
 import { speechManager } from "@/lib/learn/speechManager";
 import { getQuestionImage } from "@/lib/learn/imageMapper";
 import { QuizProgressBar } from "@/components/learn/quiz/QuizProgressBar";
+import { getInteractionMode } from "@/lib/learn/games/tapCompatibleQuestions";
+import { TapGame } from "@/components/learn/games/TapGame";
 import { cn } from "@/lib/utils/cn";
 import type { Category, Level, Question } from "@/types/learnAcademy";
 
@@ -33,6 +35,7 @@ export function QuizSession({
 }) {
   const currentQuestion = questions[currentQuestionIndex];
   const imageUrl = getQuestionImage(currentQuestion.question, currentQuestion.category);
+  const interactionMode = getInteractionMode(currentQuestion);
 
   const [timeLeft, setTimeLeft] = useState(30);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -268,66 +271,78 @@ export function QuizSession({
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {currentQuestion.options.map((option, idx) => {
-            const isThisSelected = selectedAnswer === option;
-            const isThisCorrect = option === currentQuestion.answer;
-            const hasChosen = selectedAnswer !== null;
+        {interactionMode === "tap" ? (
+          <TapGame
+            options={currentQuestion.options}
+            correctAnswer={currentQuestion.answer}
+            selectedAnswer={selectedAnswer}
+            disabled={feedback !== null}
+            onSelect={handleAnswerSelect}
+          />
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {currentQuestion.options.map((option, idx) => {
+              const isThisSelected = selectedAnswer === option;
+              const isThisCorrect = option === currentQuestion.answer;
+              const hasChosen = selectedAnswer !== null;
 
-            let optionStyle = "border-border bg-bg hover:border-primary/40 text-text";
-            if (hasChosen) {
-              if (isThisCorrect) optionStyle = "border-accent bg-accent/15 text-text";
-              else if (isThisSelected) optionStyle = "border-red-300 bg-red-50 text-text";
-              else optionStyle = "border-border bg-bg/60 text-text-muted opacity-50 cursor-not-allowed";
-            }
+              let optionStyle = "border-border bg-bg hover:border-primary/40 text-text";
+              if (hasChosen) {
+                if (isThisCorrect) optionStyle = "border-accent bg-accent/15 text-text";
+                else if (isThisSelected) optionStyle = "border-red-300 bg-red-50 text-text";
+                else optionStyle = "border-border bg-bg/60 text-text-muted opacity-50 cursor-not-allowed";
+              }
 
-            const isThisOptionSpeaking = speakingId === `option-${idx}`;
+              const isThisOptionSpeaking = speakingId === `option-${idx}`;
 
-            return (
-              <div
-                key={idx}
-                role="button"
-                tabIndex={hasChosen ? -1 : 0}
-                onClick={() => !hasChosen && handleAnswerSelect(option)}
-                onKeyDown={(e) => {
-                  if ((e.key === "Enter" || e.key === " ") && !hasChosen) handleAnswerSelect(option);
-                }}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border-2 p-4 text-left font-bold transition-all focus:outline-none",
-                  hasChosen ? "cursor-default" : "cursor-pointer",
-                  optionStyle
-                )}
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-primary font-display text-lg font-extrabold text-white">
-                  {optionLabels[idx]}
-                </div>
-                <span className="flex-1 text-base leading-tight">{option}</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSpeak(`option-${idx}`, `${optionLabels[idx]}: ${option}`);
+              return (
+                <div
+                  key={idx}
+                  role="button"
+                  tabIndex={hasChosen ? -1 : 0}
+                  onClick={() => !hasChosen && handleAnswerSelect(option)}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === " ") && !hasChosen) handleAnswerSelect(option);
                   }}
                   className={cn(
-                    "shrink-0 rounded-xl border-2 p-2 transition-all",
-                    isThisOptionSpeaking
-                      ? "scale-110 border-secondary bg-secondary/30"
-                      : "border-border bg-surface text-text-muted hover:bg-bg"
+                    "flex items-center gap-3 rounded-2xl border-2 p-4 text-left font-bold transition-all focus:outline-none",
+                    hasChosen ? "cursor-default" : "cursor-pointer",
+                    optionStyle
                   )}
                 >
-                  <Volume2 size={14} className={isThisOptionSpeaking ? "animate-bounce" : ""} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-white bg-primary font-display text-lg font-extrabold text-white">
+                    {optionLabels[idx]}
+                  </div>
+                  <span className="flex-1 text-base leading-tight">{option}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSpeak(`option-${idx}`, `${optionLabels[idx]}: ${option}`);
+                    }}
+                    className={cn(
+                      "shrink-0 rounded-xl border-2 p-2 transition-all",
+                      isThisOptionSpeaking
+                        ? "scale-110 border-secondary bg-secondary/30"
+                        : "border-border bg-surface text-text-muted hover:bg-bg"
+                    )}
+                  >
+                    <Volume2 size={14} className={isThisOptionSpeaking ? "animate-bounce" : ""} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-        <div className="mt-6 flex justify-center gap-4 text-center text-xs font-bold text-text-muted">
-          <span>Tombol: [1] A</span>
-          <span>[2] B</span>
-          <span>[3] C</span>
-          <span>[4] D</span>
-        </div>
+        {interactionMode === "classic" && (
+          <div className="mt-6 flex justify-center gap-4 text-center text-xs font-bold text-text-muted">
+            <span>Tombol: [1] A</span>
+            <span>[2] B</span>
+            <span>[3] C</span>
+            <span>[4] D</span>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
