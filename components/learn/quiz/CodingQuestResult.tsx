@@ -18,6 +18,8 @@ interface CodingQuestResultProps {
   unlockedRobots: string[];
   /** Optional — only set when the gamificationXp feature flag is on. */
   xpEarned?: number;
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  currentStreakDays?: number;
   onRestartSession: () => void;
   onGoHome: () => void;
 }
@@ -33,6 +35,7 @@ export function CodingQuestResult({
   starsEarned,
   unlockedRobots,
   xpEarned,
+  currentStreakDays,
   onRestartSession,
   onGoHome,
 }: CodingQuestResultProps) {
@@ -119,6 +122,11 @@ export function CodingQuestResult({
               +{xpEarned} XP
             </div>
           </div>
+        )}
+        {typeof currentStreakDays === "number" && currentStreakDays >= 2 && (
+          <p className="text-center text-sm font-bold text-orange-500">
+            🔥 {currentStreakDays} hari beruntun belajar!
+          </p>
         )}
 
         {/* AI Summary Section */}

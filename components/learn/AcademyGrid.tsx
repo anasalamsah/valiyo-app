@@ -51,9 +51,16 @@ export function AcademyGrid({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           {xpEnabled && gamification && (
-            <div className="inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-3 py-1 text-xs font-bold text-text">
-              <Zap size={12} className="text-secondary" fill="currentColor" />
-              {gamification.totalXp} XP
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-3 py-1 text-xs font-bold text-text">
+                <Zap size={12} className="text-secondary" fill="currentColor" />
+                {gamification.totalXp} XP
+              </div>
+              {gamification.currentStreakDays >= 2 && (
+                <div className="inline-flex items-center gap-1 rounded-pill bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600">
+                  🔥 {gamification.currentStreakDays} hari
+                </div>
+              )}
             </div>
           )}
           <Link

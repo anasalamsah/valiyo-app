@@ -37,6 +37,7 @@ export function QuizResultScreen({
   incorrectAnswersCount,
   answersHistory,
   xpEarned,
+  currentStreakDays,
   onRestartSession,
   onGoHome,
 }: {
@@ -49,6 +50,8 @@ export function QuizResultScreen({
   answersHistory: AnswerHistoryItem[];
   /** Optional — only set when the gamificationXp feature flag is on. */
   xpEarned?: number;
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  currentStreakDays?: number;
   onRestartSession: () => void;
   onGoHome: () => void;
 }) {
@@ -93,6 +96,11 @@ export function QuizResultScreen({
               <Zap size={14} className="text-secondary" fill="currentColor" />
               +{xpEarned} XP
             </div>
+          )}
+          {typeof currentStreakDays === "number" && currentStreakDays >= 2 && (
+            <p className="mt-2 text-sm font-bold text-orange-500">
+              🔥 {currentStreakDays} hari beruntun belajar!
+            </p>
           )}
         </div>
 

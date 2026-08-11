@@ -106,6 +106,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // child_gamification/{childId} — persistent XP/stars per child (Batch 1:
+    // XP only), one document per childId. Same ownership + entitlement gate
+    // as learn_progress above. Unlike learn_progress, the client only ever
+    // reads this via a single get-by-document-ID (never a list/where
+    // query), so this rule's `resource.data.uid` check is sufficient on
+    // its own — there's no separate query-scoping clause to add here.
+    match /child_gamification/{childId} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid && hasProduct('learn');
+      allow create, update: if isSignedIn() && request.resource.data.uid == request.auth.uid && hasProduct('learn');
+      allow delete: if false;
+    }
+
     // discovery_results — same entitlement gate as learn_progress above,
     // for products.discovery.
     match /discovery_results/{resultId} {

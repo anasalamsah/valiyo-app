@@ -7,7 +7,7 @@ import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
 import { resolveChildLevel } from "@/lib/learn/levelResolution";
 import { isFeatureEnabled } from "@/config/featureFlags";
 import { calculateMissionXp } from "@/lib/learn/gamification/xpCalculator";
-import { awardXp } from "@/lib/firestore/gamification";
+import { recordMissionCompletion } from "@/lib/firestore/gamification";
 import { QuizSession } from "@/components/learn/quiz/QuizSession";
 import { QuizResultScreen } from "@/components/learn/quiz/QuizResultScreen";
 import type { AcademyData, MissionData } from "@/types/learnAcademy";
@@ -50,6 +50,7 @@ export function QuizFlow({
   const [finished, setFinished] = useState(false);
   const [saved, setSaved] = useState(false);
   const [xpEarned, setXpEarned] = useState<number | null>(null);
+  const [currentStreakDays, setCurrentStreakDays] = useState<number | null>(null);
 
   const sessionKey = `${academy.id}-${mission.id}`;
 
@@ -87,7 +88,8 @@ export function QuizFlow({
             try {
               const xp = calculateMissionXp(newCorrect, questions.length);
               setXpEarned(xp);
-              await awardXp(user.uid, childId, xp);
+              const result = await recordMissionCompletion(user.uid, childId, xp);
+              setCurrentStreakDays(result.currentStreakDays);
             } catch (xpErr) {
               // Gamification is an enhancement, not a dependency of the
               // core learning experience — an XP failure must never affect
@@ -132,6 +134,7 @@ export function QuizFlow({
         incorrectAnswersCount={incorrectCount}
         answersHistory={history}
         xpEarned={xpEarned ?? undefined}
+        currentStreakDays={currentStreakDays ?? undefined}
         onRestartSession={onExit}
         onGoHome={onExit}
       />
