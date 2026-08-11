@@ -9,6 +9,7 @@ import { getQuestionImage } from "@/lib/learn/imageMapper";
 import { QuizProgressBar } from "@/components/learn/quiz/QuizProgressBar";
 import { getInteractionMode } from "@/lib/learn/games/tapCompatibleQuestions";
 import { TapGame } from "@/components/learn/games/TapGame";
+import { MatchGame } from "@/components/learn/games/MatchGame";
 import { cn } from "@/lib/utils/cn";
 import type { Category, Level, Question } from "@/types/learnAcademy";
 
@@ -273,6 +274,15 @@ export function QuizSession({
 
         {interactionMode === "tap" ? (
           <TapGame
+            options={currentQuestion.options}
+            correctAnswer={currentQuestion.answer}
+            selectedAnswer={selectedAnswer}
+            disabled={feedback !== null}
+            onSelect={handleAnswerSelect}
+          />
+        ) : interactionMode === "match" ? (
+          <MatchGame
+            question={currentQuestion.question}
             options={currentQuestion.options}
             correctAnswer={currentQuestion.answer}
             selectedAnswer={selectedAnswer}

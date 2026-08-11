@@ -23,13 +23,29 @@ const TAP_COMPATIBLE_QUESTION_IDS: ReadonlySet<string> = new Set([
   "ENG_PS1_003", // "...dari 'Ikan'?" — options: Fish, Cat, Dog, Bird
 ]);
 
-export type InteractionMode = "classic" | "tap";
+/**
+ * Pilot set for Match Game — same idea as Tap Game above, a separate small
+ * hand-picked list of real question IDs. Chosen from TK A Sains "animal
+ * sound" questions: short, simple options that suit the question-in-the-
+ * middle / options-around-it matching visual well.
+ */
+const MATCH_COMPATIBLE_QUESTION_IDS: ReadonlySet<string> = new Set([
+  "SCI_TKA_001", // "Suara khas...Kucing?" — options: meong-meong, mbeek-mbeek, mooh-mooh, cit-cit
+  "SCI_TKA_002", // "...Anjing?" — options: guk-guk, meong-meong, mooh-mooh, cit-cit
+  "SCI_TKA_003", // "...Kambing?" — options: mbeek-mbeek, meong-meong, mooh-mooh, cit-cit
+  "SCI_TKA_004", // "...Sapi?" — options: mooh-mooh, meong-meong, kukuruyuk, cit-cit
+  "SCI_TKA_005", // "...Bebek?" — options: kwek-kwek, meong-meong, mooh-mooh, cit-cit
+]);
+
+export type InteractionMode = "classic" | "tap" | "match";
 
 /**
- * A question with no entry here behaves exactly as it does today: this
- * always returns "classic" unless the question's id is explicitly listed
- * above. Tap is never the default.
+ * A question with no entry in either set behaves exactly as it does
+ * today: this always returns "classic" unless the question's id is
+ * explicitly listed above. Neither "tap" nor "match" is ever the default.
  */
 export function getInteractionMode(question: Question): InteractionMode {
-  return TAP_COMPATIBLE_QUESTION_IDS.has(question.id) ? "tap" : "classic";
+  if (TAP_COMPATIBLE_QUESTION_IDS.has(question.id)) return "tap";
+  if (MATCH_COMPATIBLE_QUESTION_IDS.has(question.id)) return "match";
+  return "classic";
 }

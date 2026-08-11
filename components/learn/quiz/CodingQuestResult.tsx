@@ -5,6 +5,7 @@ import type { Level, CodingSkillType } from "@/types/learnAcademy";
 import { Bot, Star, Puzzle, Sparkles, RefreshCw, Home, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Confetti } from "@/components/learn/Confetti";
+import { useCountUp } from "@/lib/hooks/useCountUp";
 
 interface CodingQuestResultProps {
   childName: string;
@@ -39,6 +40,10 @@ export function CodingQuestResult({
   onRestartSession,
   onGoHome,
 }: CodingQuestResultProps) {
+  const animatedScore = useCountUp(score);
+  const animatedStars = useCountUp(starsEarned, 700);
+  const animatedPuzzle = useCountUp(puzzlePieces, 700);
+  const animatedXp = useCountUp(xpEarned ?? 0, 1200);
 
   // Skill list with display icons & labels
   const skillList: { key: CodingSkillType; label: string; icon: string }[] = [
@@ -86,47 +91,77 @@ export function CodingQuestResult({
       >
         {/* Top Badges Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-          <div className="bg-purple-50 border-2 border-purple-200 p-3 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="bg-purple-50 border-2 border-purple-200 p-3 rounded-2xl"
+          >
             <span className="text-xs text-purple-700 font-bold block font-display">Skor Quest</span>
-            <span className="text-2xl font-extrabold font-display text-purple-950">{score} Poin</span>
-          </div>
+            <span className="text-2xl font-extrabold font-display text-purple-950">{animatedScore} Poin</span>
+          </motion.div>
 
-          <div className="bg-amber-50 border-2 border-amber-200 p-3 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-amber-50 border-2 border-amber-200 p-3 rounded-2xl"
+          >
             <span className="text-xs text-amber-800 font-bold block font-display">Bintang Coding</span>
             <div className="flex items-center justify-center gap-1 text-2xl font-extrabold font-display text-amber-950">
               <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
-              <span>{starsEarned}</span>
+              <span>{animatedStars}</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-indigo-50 border-2 border-indigo-200 p-3 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-indigo-50 border-2 border-indigo-200 p-3 rounded-2xl"
+          >
             <span className="text-xs text-indigo-800 font-bold block font-display">Keping Puzzle</span>
             <div className="flex items-center justify-center gap-1 text-2xl font-extrabold font-display text-indigo-950">
               <Puzzle className="w-5 h-5 text-indigo-500 fill-indigo-400" />
-              <span>{puzzlePieces}</span>
+              <span>{animatedPuzzle}</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-emerald-50 border-2 border-emerald-200 p-3 rounded-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-emerald-50 border-2 border-emerald-200 p-3 rounded-2xl"
+          >
             <span className="text-xs text-emerald-800 font-bold block font-display">Misi Berhasil</span>
             <span className="text-2xl font-extrabold font-display text-emerald-950">
               {correctCount}/{totalCount}
             </span>
-          </div>
+          </motion.div>
         </div>
 
         {typeof xpEarned === "number" && (
-          <div className="flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 300, damping: 15 }}
+            className="flex justify-center"
+          >
             <div className="inline-flex items-center gap-1.5 rounded-full bg-secondary/20 px-4 py-1.5 text-sm font-bold text-purple-950">
               <Zap size={14} className="text-secondary" fill="currentColor" />
-              +{xpEarned} XP
+              +{animatedXp} XP
             </div>
-          </div>
+          </motion.div>
         )}
         {typeof currentStreakDays === "number" && currentStreakDays >= 2 && (
-          <p className="text-center text-sm font-bold text-orange-500">
+          <motion.p
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: [1, 1.15, 1] }}
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="text-center text-sm font-bold text-orange-500"
+          >
             🔥 {currentStreakDays} hari beruntun belajar!
-          </p>
+          </motion.p>
         )}
 
         {/* AI Summary Section */}

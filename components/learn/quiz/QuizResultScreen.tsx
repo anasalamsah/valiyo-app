@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { BarChart3, CheckCircle2, Home, RefreshCw, Trophy, XCircle, Zap } from "lucide-react";
 import { audioManager } from "@/lib/learn/audioManager";
 import { getQuestionImage } from "@/lib/learn/imageMapper";
+import { useCountUp } from "@/lib/hooks/useCountUp";
 import { Confetti } from "@/components/learn/Confetti";
 import type { Category, Level } from "@/types/learnAcademy";
 
@@ -62,6 +63,8 @@ export function QuizResultScreen({
   const percentage =
     Math.round((correctAnswersCount / (correctAnswersCount + incorrectAnswersCount)) * 100) || 0;
   const motivation = getMotivationalMessage(percentage);
+  const animatedScore = useCountUp(score);
+  const animatedXp = useCountUp(xpEarned ?? 0, 1200);
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-6 md:py-10">
@@ -88,29 +91,49 @@ export function QuizResultScreen({
         <div className="text-center">
           <p className="text-sm font-bold uppercase tracking-wider text-text-muted">Skor Akhir</p>
           <div className="mt-2 flex items-baseline justify-center gap-1">
-            <span className="font-display text-6xl font-extrabold text-primary sm:text-7xl">{score}</span>
+            <span className="font-display text-6xl font-extrabold text-primary sm:text-7xl">{animatedScore}</span>
             <span className="text-2xl font-bold text-text-muted">/ 100</span>
           </div>
           {typeof xpEarned === "number" && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-4 py-1.5 text-sm font-bold text-text">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 15 }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-pill bg-secondary/20 px-4 py-1.5 text-sm font-bold text-text"
+            >
               <Zap size={14} className="text-secondary" fill="currentColor" />
-              +{xpEarned} XP
-            </div>
+              +{animatedXp} XP
+            </motion.div>
           )}
           {typeof currentStreakDays === "number" && currentStreakDays >= 2 && (
-            <p className="mt-2 text-sm font-bold text-orange-500">
+            <motion.p
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: [1, 1.15, 1] }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="mt-2 text-sm font-bold text-orange-500"
+            >
               🔥 {currentStreakDays} hari beruntun belajar!
-            </p>
+            </motion.p>
           )}
         </div>
 
-        <div className={`rounded-[24px] p-4 text-center ${motivation.bg}`}>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className={`rounded-[24px] p-4 text-center ${motivation.bg}`}
+        >
           <div className="mb-1 text-3xl">{motivation.emoji}</div>
           <h3 className="font-display text-xl font-extrabold">{motivation.title}</h3>
           <p className="mt-1 text-xs font-semibold opacity-90 sm:text-sm">{motivation.desc}</p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-2 gap-4"
+        >
           <div className="rounded-2xl border-2 border-border bg-bg p-4 text-center">
             <p className="text-xs font-bold text-text-muted">👦 Nama Peserta</p>
             <p className="mt-1 truncate text-lg font-extrabold text-text">{childName}</p>
@@ -121,9 +144,14 @@ export function QuizResultScreen({
               {level} • {category}
             </p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="border-t border-border pt-6">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="border-t border-border pt-6"
+        >
           <div className="mb-4 flex items-center justify-between">
             <h4 className="flex items-center gap-2 font-display text-base font-extrabold text-text">
               <BarChart3 size={18} className="text-primary" /> Statistik Jawaban
@@ -163,7 +191,7 @@ export function QuizResultScreen({
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 gap-4 border-t border-border pt-6 sm:grid-cols-2">
           <button
