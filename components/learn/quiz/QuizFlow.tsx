@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { getRandomSessionQuestions } from "@/config/learnQuestions";
+import { allocateQuizMissionQuestions } from "@/lib/learn/missionQuestionAllocator";
 import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
 import { resolveChildLevel } from "@/lib/learn/levelResolution";
 import { isFeatureEnabled } from "@/config/featureFlags";
@@ -40,7 +40,7 @@ export function QuizFlow({
   const level = resolveChildLevel(childId, childAge);
 
   const [sessionResult] = useState(() =>
-    getRandomSessionQuestions(level, academy.category, mission.questionCount)
+    allocateQuizMissionQuestions(level, academy.category, mission.type, mission.questionCount)
   );
   const questions = sessionResult.ok ? sessionResult.questions : [];
   const [currentIndex, setCurrentIndex] = useState(0);

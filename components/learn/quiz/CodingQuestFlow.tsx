@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { getCodingActivitiesByLevel } from "@/config/learnCodingQuestBank";
+import { allocateCodingQuestActivities } from "@/lib/learn/missionQuestionAllocator";
 import { saveAcademyProgress } from "@/lib/firestore/learnProgress";
 import { resolveChildLevel } from "@/lib/learn/levelResolution";
 import { isFeatureEnabled } from "@/config/featureFlags";
@@ -42,7 +42,7 @@ export function CodingQuestFlow({
   const level = resolveChildLevel(childId, childAge);
 
   const [activities] = useState(() =>
-    getCodingActivitiesByLevel(level).slice(0, mission.questionCount)
+    allocateCodingQuestActivities(level, mission.type, mission.questionCount)
   );
   const [result, setResult] = useState<ResultData | null>(null);
   const [saved, setSaved] = useState(false);
