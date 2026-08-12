@@ -826,7 +826,7 @@ export function CodingQuestSession({
                 Pilih panah yang benar untuk menggantikan {arrowSymbol(currentActivity.faultyCommands?.[currentActivity.faultyIndex || 0] || "")}:
               </p>
               <div className="flex justify-center gap-3">
-                {(["UP", "RIGHT", "DOWN", "LEFT"] as const).map((cmd) => (
+                {(["⬆", "➡", "⬇", "⬅"] as const).map((cmd) => (
                   <button
                     key={cmd}
                     type="button"
