@@ -61,6 +61,11 @@ export function AcademyGrid({
                   🔥 {gamification.currentStreakDays} hari
                 </div>
               )}
+              {gamification.unlockedAchievementIds?.length > 0 && (
+                <div className="inline-flex items-center gap-1 rounded-pill bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">
+                  🏆 {gamification.unlockedAchievementIds.length} Lencana
+                </div>
+              )}
             </div>
           )}
           <Link

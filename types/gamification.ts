@@ -6,11 +6,11 @@ import type { Timestamp } from "firebase/firestore";
  * new, isolated progression layer alongside — not a replacement for —
  * `learn_progress`'s `progressPercent` (see types/learning.ts).
  *
- * Batch 1 shipped totalXp/starsBalance. Batch 4 adds streak fields
- * additively — existing documents/readers are unaffected; a document
- * created before this batch simply reads `currentStreakDays`/
- * `lastActivityDate` as undefined until its next mission completion.
- * avatar/pets/achievements remain out of scope for their own later
+ * Batch 1 shipped totalXp/starsBalance. Batch 4 added streak fields.
+ * Batch 6 adds missionsCompleted + unlockedAchievementIds additively —
+ * existing documents/readers are unaffected; a document created before
+ * this batch simply reads these as undefined until its next mission
+ * completion. avatar/pets remain out of scope for their own later
  * batches.
  */
 export type ChildGamification = {
@@ -22,5 +22,9 @@ export type ChildGamification = {
   currentStreakDays: number;
   /** Local "YYYY-MM-DD" of the most recent mission completion, or null if none yet. */
   lastActivityDate: string | null;
+  /** Total number of missions (Quiz or Coding Quest) ever completed. */
+  missionsCompleted: number;
+  /** IDs from lib/learn/gamification/achievements.ts already unlocked. */
+  unlockedAchievementIds: string[];
   updatedAt: Timestamp | null;
 };

@@ -6,6 +6,7 @@ import { Bot, Star, Puzzle, Sparkles, RefreshCw, Home, Zap } from "lucide-react"
 import { motion } from "framer-motion";
 import { Confetti } from "@/components/learn/Confetti";
 import { useCountUp } from "@/lib/hooks/useCountUp";
+import type { Achievement } from "@/lib/learn/gamification/achievements";
 
 interface CodingQuestResultProps {
   childName: string;
@@ -21,6 +22,8 @@ interface CodingQuestResultProps {
   xpEarned?: number;
   /** Optional — only set when the gamificationXp feature flag is on. */
   currentStreakDays?: number;
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  newAchievements?: Achievement[];
   onRestartSession: () => void;
   onGoHome: () => void;
 }
@@ -37,6 +40,7 @@ export function CodingQuestResult({
   unlockedRobots,
   xpEarned,
   currentStreakDays,
+  newAchievements,
   onRestartSession,
   onGoHome,
 }: CodingQuestResultProps) {
@@ -162,6 +166,29 @@ export function CodingQuestResult({
           >
             🔥 {currentStreakDays} hari beruntun belajar!
           </motion.p>
+        )}
+
+        {newAchievements && newAchievements.length > 0 && (
+          <div className="space-y-2">
+            {newAchievements.map((achievement, idx) => (
+              <motion.div
+                key={achievement.id}
+                initial={{ opacity: 0, scale: 0.7, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 1.1 + idx * 0.15, type: "spring", stiffness: 260, damping: 18 }}
+                className="flex items-center gap-3 rounded-2xl border-2 border-secondary/40 bg-secondary/10 p-3"
+              >
+                <span className="text-3xl">{achievement.icon}</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-secondary">
+                    Lencana Baru!
+                  </p>
+                  <p className="font-display text-sm font-extrabold text-purple-950">{achievement.title}</p>
+                  <p className="text-xs text-purple-700">{achievement.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
 
         {/* AI Summary Section */}

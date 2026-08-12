@@ -7,6 +7,7 @@ import { audioManager } from "@/lib/learn/audioManager";
 import { getQuestionImage } from "@/lib/learn/imageMapper";
 import { useCountUp } from "@/lib/hooks/useCountUp";
 import { Confetti } from "@/components/learn/Confetti";
+import type { Achievement } from "@/lib/learn/gamification/achievements";
 import type { Category, Level } from "@/types/learnAcademy";
 
 type AnswerHistoryItem = {
@@ -39,6 +40,7 @@ export function QuizResultScreen({
   answersHistory,
   xpEarned,
   currentStreakDays,
+  newAchievements,
   onRestartSession,
   onGoHome,
 }: {
@@ -53,6 +55,8 @@ export function QuizResultScreen({
   xpEarned?: number;
   /** Optional — only set when the gamificationXp feature flag is on. */
   currentStreakDays?: number;
+  /** Optional — only set when the gamificationXp feature flag is on. */
+  newAchievements?: Achievement[];
   onRestartSession: () => void;
   onGoHome: () => void;
 }) {
@@ -116,6 +120,29 @@ export function QuizResultScreen({
             </motion.p>
           )}
         </div>
+
+        {newAchievements && newAchievements.length > 0 && (
+          <div className="space-y-2">
+            {newAchievements.map((achievement, idx) => (
+              <motion.div
+                key={achievement.id}
+                initial={{ opacity: 0, scale: 0.7, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 1 + idx * 0.15, type: "spring", stiffness: 260, damping: 18 }}
+                className="flex items-center gap-3 rounded-2xl border-2 border-secondary/40 bg-secondary/10 p-3"
+              >
+                <span className="text-3xl">{achievement.icon}</span>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-secondary">
+                    Lencana Baru!
+                  </p>
+                  <p className="font-display text-sm font-extrabold text-text">{achievement.title}</p>
+                  <p className="text-xs text-text-muted">{achievement.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
