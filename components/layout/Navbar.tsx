@@ -2,6 +2,8 @@ import Link from "next/link";
 import { navLinks, siteConfig } from "@/config/site";
 import { AuthButton } from "@/components/ui/AuthButton";
 import { AdminNavLink } from "@/components/layout/AdminNavLink";
+import { ProductsMegaMenu } from "@/components/layout/ProductsMegaMenu";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 
 export function Navbar() {
   return (
@@ -12,6 +14,9 @@ export function Navbar() {
         </Link>
 
         <ul className="hidden items-center gap-8 text-sm font-medium text-text md:flex">
+          <li>
+            <ProductsMegaMenu />
+          </li>
           {navLinks.map((link) => (
             <li key={link.href}>
               <Link
@@ -24,9 +29,12 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-5">
-          <AdminNavLink />
-          <AuthButton />
+        <div className="flex items-center gap-3 md:gap-5">
+          <div className="hidden items-center gap-5 md:flex">
+            <AdminNavLink />
+            <AuthButton />
+          </div>
+          <MobileMenu />
         </div>
       </nav>
     </header>

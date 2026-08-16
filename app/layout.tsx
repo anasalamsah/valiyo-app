@@ -3,9 +3,16 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "Valiyo — Growing Every Child's Future",
+  title: "Valiyo | Digital Learning for Every Stage of Growth",
   description:
-    "Help parents understand each child's unique strengths and support their learning journey with personalized insights and future-ready experiences.",
+    "Valiyo is a digital learning platform for children, students, teachers, and lifelong learners, designed to make learning, discovery, and growth more engaging and meaningful.",
+  openGraph: {
+    title: "Valiyo | Digital Learning for Every Stage of Growth",
+    description:
+      "Valiyo is a digital learning platform for children, students, teachers, and lifelong learners, designed to make learning, discovery, and growth more engaging and meaningful.",
+    siteName: "Valiyo",
+    type: "website",
+  },
 };
 
 // Fonts are loaded via a stylesheet link (rather than next/font) so the app
